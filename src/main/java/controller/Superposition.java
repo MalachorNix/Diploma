@@ -22,12 +22,19 @@ public final class Superposition {
 
     public static Complex superposition2D(int N, double x, double y, double gauss, Complex[][] coefficient) {
         Complex result = new Complex(0);
+        Complex multi;
 
-        for (int m = 0; m <= N; m++) {
-            for (int n = 0; n <= N; n++) {
-                result.add(coefficient[m][n].multiply(HermiteGaussianModes.hermiteGauss2D(n, m, x, y, gauss)));
+        for (int m = 0; m < N; m++) {
+            for (int n = 0; n < N; n++) {
+                multi = coefficient[m][n].multiply(HermiteGaussianModes.hermiteGauss2D(m, n, x, y, gauss));
+                result = new Complex(result.getReal() + multi.getReal(), result.getImaginary() + multi.getImaginary());
             }
         }
+
+        /*for (int m = 0; m <= N; m++) {
+            multi = coefficient[m][m].multiply(HermiteGaussianModes.hermiteGauss2D(m, m, x, y, gauss));
+            result = new Complex(result.getReal() + multi.getReal(), result.getImaginary() + multi.getImaginary());
+        }*/
 
         return result;
     }
