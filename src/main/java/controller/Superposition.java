@@ -24,17 +24,18 @@ public final class Superposition {
         Complex result = new Complex(0);
         Complex multi;
 
-        for (int m = 0; m < N; m++) {
-            for (int n = 0; n < N; n++) {
+        /*for (int m = 0; m <= N; m++) {
+            for (int n = 0; n <= N; n++) {
+                // multi = coefficient[m][n].multiply(HermiteGaussianModes.hermiteGauss2D(n, m, x, y, gauss));
                 multi = coefficient[m][n].multiply(HermiteGaussianModes.hermiteGauss2D(m, n, x, y, gauss));
                 result = new Complex(result.getReal() + multi.getReal(), result.getImaginary() + multi.getImaginary());
             }
-        }
+        }*/
 
-        /*for (int m = 0; m <= N; m++) {
+        for (int m = 0; m <= N; m++) {
             multi = coefficient[m][m].multiply(HermiteGaussianModes.hermiteGauss2D(m, m, x, y, gauss));
             result = new Complex(result.getReal() + multi.getReal(), result.getImaginary() + multi.getImaginary());
-        }*/
+        }
 
         return result;
     }

@@ -1,24 +1,20 @@
 package view;
 
 import controller.FresnelTransform;
-import controller.Superposition;
 import org.apache.commons.math3.complex.Complex;
-import org.junit.Test;
-
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
-import java.awt.color.ColorSpace;
 import java.awt.image.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static controller.Superposition.superposition2D;
 
 public class Graph {
 
-    public void draw2DIntensity(Complex[][] function) {
+    public static void draw2DIntensity(Complex[][] function, String filename) {
         double[][] intensity = new double[function.length][function[0].length];
         double minAmplitude = Double.MAX_VALUE;
         double maxAmplitude = Double.MIN_VALUE;
@@ -38,11 +34,34 @@ public class Graph {
             }
         }
 
-        writeImage(intensity, maxAmplitude, minAmplitude, "intensity.bmp");
+        writeImage(intensity, maxAmplitude, minAmplitude, filename);
 
     }
 
-    private void writeImage(double[][] function, double max, double min, String filename) {
+    public static void draw2DPhase(Complex[][] function, String filename) {
+        double[][] phase = new double[function.length][function[0].length];
+        double minPhase = Double.MAX_VALUE;
+        double maxPhase = Double.MIN_VALUE;
+
+        for (int i = 0; i < function.length; i++) {
+            for (int j = 0; j < function[0].length; j++) {
+                phase[i][j] = function[i][j].getArgument();
+
+                if (phase[i][j] > maxPhase) {
+                    maxPhase = phase[i][j];
+                }
+
+                if (phase[i][j] < minPhase) {
+                    minPhase = phase[i][j];
+                }
+
+            }
+        }
+
+        writeImage(phase, maxPhase, minPhase, filename);
+    }
+
+    private static void writeImage(double[][] function, double max, double min, String filename) {
         double stepNorm = (max - min) / 255;
 
 
@@ -68,33 +87,9 @@ public class Graph {
         }
     }
 
-
-    public void draw2DPhase(Complex[][] function) {
-        double[][] phase = new double[function.length][function[0].length];
-        double minPhase = Double.MAX_VALUE;
-        double maxPhase = Double.MIN_VALUE;
-
-        for (int i = 0; i < function.length; i++) {
-            for (int j = 0; j < function[0].length; j++) {
-                phase[i][j] = function[i][j].getArgument();
-
-                if (phase[i][j] > maxPhase) {
-                    maxPhase = phase[i][j];
-                }
-
-                if (phase[i][j] < minPhase) {
-                    minPhase = phase[i][j];
-                }
-
-            }
-        }
-
-        writeImage(phase, maxPhase, minPhase, "phase.bmp");
-    }
-
-    public void convert() {
+    public static void convertTo8BitImage() {
         try {
-            BufferedImage source = ImageIO.read(new File("intensityExit.bmp"));
+            BufferedImage source = ImageIO.read(new File("intensity.bmp"));
             BufferedImage gray = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
             Graphics2D g2d = gray.createGraphics();
             g2d.drawImage(source, 0, 0, null);
@@ -102,18 +97,17 @@ public class Graph {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageOutputStream ios = ImageIO.createImageOutputStream(baos);
-            ImageIO.write(gray, "png", ios);
+            ImageIO.write(gray, "bmp", ios);
             ImageIO.write(gray, "bmp", new File("test.bmp"));
             ios.close();
 
-            byte[] array = baos.toByteArray();
         } catch (IOException ex) {
-            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }
 
 
-    public Complex[][] phaseOnlyEncode(Complex[][] superposition) {
+    private static Complex[][] phaseOnlyEncode(Complex[][] superposition) {
 
         Complex[][] result = new Complex[superposition.length][superposition[0].length];
 
@@ -127,9 +121,26 @@ public class Graph {
         return result;
     }
 
-    public void elrngl() {
-        int N = 10;
-        Complex[][] coefficient = new Complex[N][N];
+    public static void draw2DPhaseOnlyIntensity() {
+        int width = 128, height = 128; // Размеры изображения.
+        int N = 3; // Порядок полиномов Эрмита.
+        int n = 3, m = 3;
+        double u = -32, v = -32;
+        double z = 100; // Расстояние.
+        double k = 4; // Волновое число.
+        double yMin = -32;
+        double yMax = 32;
+        double xMin = -32;
+        double xMax = 32;
+        double stepY = -2 * yMin / height;
+        double stepX = -2 * xMin / width;
+        double gauss = 7; // Гауссовый параметр.
+        double uChange = u; // Переменные, которые будут меняться.
+        double vChange = v;
+        Complex[][] function = new Complex[width][height];
+        double stepU = -2 * u / width;
+        double stepV = -2 * v / height;
+        Complex[][] coefficient = new Complex[N + 1][N + 1]; //Набор комплексных коэффициентов.
 
         for (int i = 0; i < coefficient.length; i++) {
             for (int j = 0; j < coefficient[0].length; j++) {
@@ -137,34 +148,34 @@ public class Graph {
             }
         }
 
-        Complex[][] superposition = new Complex[128][128];
+        Complex[][] superposition = new Complex[width][height];
 
-        double x = -64, y = -64;
+        double x = -32, y = -32;
+        double xStep = -2 * x / width;
+        double yStep = -2 * y / height;
 
-        for (int i = 0; i < superposition.length; i++, x++) {
-            for (int j = 0; j < superposition[0].length; j++, y++) {
-                superposition[i][j] = Superposition.superposition2D(10, x, y, 11, coefficient);
+        for (int i = 0; i < superposition.length; i++) {
+            for (int j = 0; j < superposition[0].length; j++) {
+                superposition[i][j] = superposition2D(N, x + i * xStep, y + j * yStep, gauss, coefficient);
             }
-            y = -64;
         }
 
         Complex[][] result = phaseOnlyEncode(superposition);
 
-        Complex[][] function = new Complex[128][128];
-
-        double u = -64, v = -64;
-
-        for (int i = 0; i < function.length; i++, u++) {
-            for (int j = 0; j < function[0].length; j++, v++) {
-                function[i][j] = FresnelTransform.transform2DSuperposition(u, v, 100, 4, -1, 1, -1, 1, 0.02, 0.02, result[i][j]);
+        for (int i = 0; i < function.length; i++, uChange += stepU) {
+            for (int j = 0; j < function[0].length; j++, vChange += stepV) {
+                function[i][j] = FresnelTransform.
+                        transform2DPhaseOnly(uChange, vChange, z, k,
+                                yMin, yMax,
+                                xMin, xMax,
+                                stepX, stepY,
+                                N, gauss, width, height, result, coefficient);
             }
-            v = -64;
+            vChange = v;
         }
 
-        draw2DIntensity(function);
+        draw2DIntensity(function, "intensityPhaseOnly.bmp");
+        draw2DPhase(function, "phasePhaseOnly.bmp");
     }
 
-    public static void main(String[] args) {
-        new Graph().elrngl();
-    }
 }

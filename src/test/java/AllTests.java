@@ -59,13 +59,13 @@ public class AllTests {
 
     }
 
-    @Test
+    /*@Test
     public void integral2D() throws Exception {
         Complex testValue = FresnelTransform.integral2D(1, 2, 3, 4, 5, 6, 7, 8, 0.001, 0.001, 4, 3, 11);
 
         assertEquals(-0.5380, testValue.getReal(), 0.01);
         assertEquals(1.4577, testValue.getImaginary(), 0.01);
-    }
+    }*/
 
     @Test
     public void multiTest() throws Exception {

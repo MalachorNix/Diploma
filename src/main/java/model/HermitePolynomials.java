@@ -26,7 +26,8 @@ public final class HermitePolynomials {
         double result = 0;
 
         for (int i = 2; i <= n; i++) {
-            result = 2 * x * polynomial(i - 1, x) - 2 * (n - 1) * polynomial(i - 2, x);
+            // result = 2 * x * polynomial(i - 1, x) - 2 * (n - 1) * polynomial(i - 2, x);
+            result = 2 * x * polynomial(i - 1, x) - 2 * (i - 1) * polynomial(i - 2, x);
         }
 
         return result;
