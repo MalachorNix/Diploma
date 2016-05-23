@@ -11,51 +11,59 @@ public final class FresnelTransform {
 
     }
 
-    public static Complex transform1D(double u, double z, double k, int n, double a, double b,
-                                      double step, double gauss) {
+    public static Complex transform1D(double u, double z, double k, int n, double a, double step, double gauss, int width) {
         Complex first = firstMultiplier1DTransform(k, z);
         Complex second = firstExponent(k, z);
-        Complex third = integral1D(u, z, k, a, b, step, n, gauss);
+        Complex third = integral1D(u, z, k, a, step, n, gauss, width);
         return first.multiply(second).multiply(third);
     }
 
     public static Complex transform2D(double u, double v, double z, double k,
-                                      double a, double b,
-                                      double c, double d,
+                                      double yMin, double xMin,
                                       double stepX, double stepY,
                                       int n, int m, double gauss,
                                       int width, int height) {
+
         Complex first = firstMultiplier2DTransform(k, z);
         Complex second = firstExponent(k, z);
-        Complex third = integral2D(u, v, z, k, a, b, c, d, stepX, stepY, n, m, gauss, width, height);
+        Complex third = integral2D(u, v, z, k, yMin, xMin, stepX, stepY, n, m, gauss, width, height);
+        return first.multiply(second).multiply(third);
+    }
+
+    public static Complex transform2DPhase(double u, double v, double z, double k,
+                                      double yMin, double xMin,
+                                      double stepX, double stepY,
+                                      int n, int m, double gauss,
+                                      int width, int height) {
+
+        Complex first = firstMultiplier2DTransform(k, z);
+        Complex second = firstExponent(k, z);
+        Complex third = integral2DPhase(u, v, z, k, yMin, xMin, stepX, stepY, n, m, gauss, width, height);
         return first.multiply(second).multiply(third);
     }
 
     public static Complex transform2DSuperposition(double u, double v, double z, double k,
-                                                   double yMin, double yMax,
-                                                   double xMin, double xMax,
+                                                   double yMin,
+                                                   double xMin,
                                                    double stepX, double stepY,
-                                                   Complex superposition) {
+                                                   Complex superposition, int width, int height) {
+
         Complex first = firstMultiplier2DTransform(k, z);
         Complex second = firstExponent(k, z);
-        Complex third = integral2DSuperposition(u, v, z, k,
-                yMin, yMax, xMin, xMax, stepX, stepY, superposition);
+        Complex third = integral2DSuperposition(u, v, z, k, yMin, xMin, stepX, stepY, superposition, width, height);
 
         return first.multiply(second).multiply(third);
     }
 
     public static Complex transform2DSuperposition(double u, double v, double z, double k,
-                                                   double yMin, double yMax,
-                                                   double xMin, double xMax,
+                                                   double yMin, double xMin,
                                                    double stepX, double stepY,
                                                    int N, double gauss, Complex[][] coefficient,
                                                    int width, int height) {
+
         Complex first = firstMultiplier2DTransform(k, z);
         Complex second = firstExponent(k, z);
-        Complex third = integral2DSuperposition(u, v, z, k,
-                yMin, yMax, xMin, xMax,
-                stepX, stepY,
-                N, gauss, coefficient, width, height);
+        Complex third = integral2DSuperposition(u, v, z, k, yMin, xMin, stepX, stepY, N, gauss, coefficient, width, height);
 
         return first.multiply(second).multiply(third);
     }
@@ -66,12 +74,10 @@ public final class FresnelTransform {
                                                    double stepX, double stepY,
                                                    int N, double gauss,
                                                    int width, int height, Complex[][] phaseOnly, Complex[][] coefficient) {
+
         Complex first = firstMultiplier2DTransform(k, z);
         Complex second = firstExponent(k, z);
-        Complex third = integral2DPhaseOnly(u, v, z, k,
-                yMin, yMax, xMin, xMax,
-                stepX, stepY,
-                N, gauss, phaseOnly, width, height, coefficient);
+        Complex third = integral2DPhaseOnly(u, v, z, k, yMin, yMax, xMin, xMax, stepX, stepY, N, gauss, phaseOnly, width, height, coefficient);
 
         return first.multiply(second).multiply(third);
     }
@@ -88,30 +94,21 @@ public final class FresnelTransform {
         return Complex.I.multiply(k * z).exp();
     }
 
-    public static Complex integral1D(double u, double z, double k, double a, double b,
-                                     double step, int n, double gauss) {
+    public static Complex integral1D(double u, double z, double k, double xMin, double step, int n, double gauss, int width) {
 
         Complex sum = new Complex(0, 0);
         Complex multi;
 
-        double[] x = new double[(int) ((b - a) / step)];
-
-        for (int i = 0; i < x.length; i++) { // Если прижмет, то переделать без массива.
-            x[i] = a + step * i;
-        }
-
-        for (int i = 1; i < x.length; i++) {
-            Complex function = new Complex(HermiteGaussianModes.
-                    hermiteGauss1D(n, x[i], gauss));
-            multi = integrand1D(function, u, z, k, x[i]).multiply(step);
+        for (int i = 1; i < width; i++) {
+            Complex function = new Complex(HermiteGaussianModes.hermiteGauss1D(n, xMin + i * step, gauss));
+            multi = integrand1D(function, u, z, k, xMin + i * step).multiply(step);
             sum.add(multi);
         }
         return sum;
     }
 
     public static Complex integral2D(double u, double v, double z, double k,
-                                     double yMin, double yMax,
-                                     double xMin, double xMax,
+                                     double yMin, double xMin,
                                      double stepX, double stepY,
                                      int n, int m, double gauss,
                                      int width, int height) {
@@ -119,49 +116,54 @@ public final class FresnelTransform {
         Complex sum = new Complex(0, 0);
         Complex multi;
 
-        double[] x = new double[(int) ((xMax - xMin) / stepX) + 1];
-        double[] y = new double[(int) ((yMax - yMin) / stepY) + 1];
-
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                Complex function = new Complex(HermiteGaussianModes.
-                        hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
-                multi = integrand2D(function, k, z, xMin + i * stepX, yMin + j * stepY, u, v).
-                        multiply(stepX).multiply(stepY);
-                sum = new Complex(sum.getReal() + multi.getReal(),
-                        sum.getImaginary() + multi.getImaginary());
+                Complex function = new Complex(HermiteGaussianModes.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
+
+                multi = integrand2D(function, k, z, xMin + i * stepX, yMin + j * stepY, u, v).multiply(stepX).multiply(stepY);
+
+                sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
             }
         }
 
         return sum;
     }
 
-    public static Complex integral2DSuperposition(double u, double v, double z, double k,
-                                                  double yMin, double yMax,
-                                                  double xMin, double xMax,
-                                                  double stepX, double stepY,
-                                                  Complex superposition) {
+    private static Complex integral2DPhase(double u, double v, double z, double k,
+                                           double yMin, double xMin,
+                                           double stepX, double stepY,
+                                           int n, int m, double gauss,
+                                           int width, int height) {
 
         Complex sum = new Complex(0, 0);
         Complex multi;
 
-        double[] x = new double[(int) ((xMax - xMin) / stepX) + 1];
-        double[] y = new double[(int) ((yMax - yMin) / stepY) + 1];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                Complex function = new Complex(HermiteGaussianModes.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
 
-        for (int i = 0; i < x.length; i++) { // Если прижмет, то переделать без массива.
-            x[i] = xMin + stepX * i;
+                multi = integrand2DPhase(function.getArgument(), k, z, xMin + i * stepX, yMin + j * stepY, u, v).multiply(stepX).multiply(stepY);
+
+                sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
+            }
         }
 
-        for (int i = 0; i < y.length; i++) {
-            y[i] = yMin + stepY * i;
-        }
+        return sum;
+    }
 
-        for (int i = 0; i < x.length; i++) {
-            for (int j = 0; j < y.length; j++) {
-                multi = integrand2D(superposition, k, z, x[i], y[j], u, v).
-                        multiply(stepX).multiply(stepY);
-                sum = new Complex(sum.getReal() + multi.getReal(),
-                        sum.getImaginary() + multi.getImaginary());
+    private static Complex integral2DSuperposition(double u, double v, double z, double k,
+                                                   double yMin, double xMin,
+                                                   double stepX, double stepY,
+                                                   Complex superposition, int width, int height) {
+
+        Complex sum = new Complex(0, 0);
+        Complex multi;
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                multi = integrand2D(superposition, k, z, xMin + i * stepX, yMin + j * stepY, u, v).multiply(stepX).multiply(stepY);
+
+                sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
             }
         }
 
@@ -169,8 +171,7 @@ public final class FresnelTransform {
     }
 
     public static Complex integral2DSuperposition(double u, double v, double z, double k,
-                                                  double yMin, double yMax,
-                                                  double xMin, double xMax,
+                                                  double yMin, double xMin,
                                                   double stepX, double stepY,
                                                   int N, double gauss, Complex[][] coefficient,
                                                   int width, int height) {
@@ -221,6 +222,11 @@ public final class FresnelTransform {
     public static Complex integrand2D(Complex function, double k, double z, double x, double y,
                                       double u, double v) {
         return function.multiply(transformExponent2D(k, z, x, y, u, v));
+    }
+
+    private static Complex integrand2DPhase(double function, double k, double z, double x, double y,
+                                            double u, double v) {
+        return transformExponent2D(k, z, x, y, u, v).multiply(function);
     }
 
     public static Complex transformExponent1D(double k, double z, double x, double u) {
