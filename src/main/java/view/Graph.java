@@ -85,7 +85,8 @@ public class Graph {
             }
         }
 
-        writeImage(phase, maxPhase, minPhase, filename);
+        writeImage(phase, 2 * Math.PI, 0, filename);
+        // writeImage(phase, maxPhase, minPhase, filename);
     }
 
     private static void writeImage(double[][] function, double max, double min, String filename) {
