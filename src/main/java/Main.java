@@ -1,3 +1,4 @@
+import controller.FourierTransform2D;
 import controller.FresnelTransform;
 import model.HermiteGaussianModes;
 import org.apache.commons.math3.complex.Complex;
@@ -17,14 +18,14 @@ public class Main {
         // x, y ∈ [-B; B]
         double xRange, yRange;
         xRange = yRange = 1;
+        double yMin, xMin; //Эти значения - границы для интеграла.
+        yMin = xMin = -1;
         double z = 100; // Расстояние.
         double lambda = 0.00063; // Длина волны.
         double k = 2 * Math.PI / lambda; // Волновое число.
-        double yMin, xMin; //Эти значения - границы для интеграла.
-        yMin = xMin = -1;
         double stepY = -2 * yMin / height;
         double stepX = -2 * xMin / width;
-        double gauss = 0.3; // Гауссовый параметр.
+        double gauss = 0.05; // Гауссовый параметр.
         Complex[][] function = new Complex[width][height];
         double stepU = 2 * uRange / width;
         double stepV = 2 * vRange / height;
@@ -35,42 +36,73 @@ public class Main {
         // Задаем им значения.
         for (int i = 0; i < coefficient.length; i++) {
             for (int j = 0; j < coefficient[0].length; j++) {
-                coefficient[i][j] = new Complex(1, 0);
+                coefficient[i][j] = new Complex(1, 1);
                 // coefficient[i][j] = new Complex(i, j);
             }
         }
 
-        // transform2D(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
-        // transform2DSuperposition(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
-        // superposition(width, height, N, gauss, coefficient, -xRange, -yRange, xStep, yStep);
-        // transform2DPhase(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
-        // transform2DPhaseOnly(width, height, N, uRange, vRange, xRange, yRange, z, k, yMin, xMin, stepY, stepX, gauss, function, stepU, stepV, xStep, yStep, coefficient);
+        /*uRange = vRange = 0.2;
+        yMin = xMin = -0.2;
+        stepY = -2 * yMin / height;
+        stepX = -2 * xMin / width;
+        gauss = 0.015;
+        stepU = 2 * uRange / width;
+        stepV = 2 * vRange / height;*/
 
+        // transform2D(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
+        // transform2DPhase(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
+        superposition(width, height, N, gauss, coefficient, -xRange, -yRange, xStep, yStep);
+        // transform2DSuperpositionFresnel(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
+
+        // transform2DPhaseOnlyFresnel(width, height, N, uRange, vRange, xRange, yRange, z, k, yMin, xMin, stepY, stepX, gauss, function, stepU, stepV, xStep, yStep, coefficient);
+
+        uRange = vRange = 2.5;
+        yMin = xMin = -1;
+        stepY = -2 * yMin / height;
+        stepX = -2 * xMin / width;
+        gauss = 0.015;
+        stepU = 2 * uRange / width;
+        stepV = 2 * vRange / height;
+
+        // transform2DSuperpositionFourier(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
+        // transform2DPhaseOnlyFourier(width, height, uRange, vRange, z, k, yMin, xMin, stepY, stepX, gauss, function, stepU, stepV);
+
+
+
+        // modesSum(width, height, yMin, xMin, stepY, stepX, gauss, function);
+    }
+
+    private static void modesSum(int width, int height, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function) {
         Complex[][] one = new Complex[width][height];
         Complex[][] two = new Complex[width][height];
         Complex[][] three = new Complex[width][height];
+
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                one[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(1, 2, xMin + i * stepX, yMin + j * stepY, gauss));
-                two[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss));
-                three[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(4, 5, xMin + i * stepX, yMin + j * stepY, gauss));
+                one[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1, 5));
+                two[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5, 1));
+                three[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10, 10));
                 function[i][j] = new Complex(one[i][j].getReal() + two[i][j].getReal() + three[i][j].getReal(), one[i][j].getImaginary() + two[i][j].getImaginary() + three[i][j].getImaginary());
             }
         }
 
         Graph.draw2DIntensity(function, "pictures/intensity7.bmp");
         Graph.draw2DPhase(function, "pictures/phase7.bmp");
-        Graph.draw2DPhaseSecondVersion(function, "pictures/phase7Another.bmp");
-
-
     }
 
-    private static void transform2DPhaseOnly(int width, int height, int N, double uRange, double vRange, double xRange, double yRange, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function, double stepU, double stepV, double xStep, double yStep, Complex[][] coefficient) {
+    private static void transform2DPhaseOnlyFresnel(int width, int height, int N, double uRange, double vRange, double xRange, double yRange, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function, double stepU, double stepV, double xStep, double yStep, Complex[][] coefficient) {
         Complex[][] superposition = new Complex[width][height];
+        Complex[][] one = new Complex[width][height];
+        Complex[][] two = new Complex[width][height];
+        Complex[][] three = new Complex[width][height];
 
         for (int i = 0; i < superposition.length; i++) {
             for (int j = 0; j < superposition[0].length; j++) {
-                superposition[i][j] = superposition2D(N, -xRange + i * xStep, -yRange + j * yStep, gauss, coefficient);
+                one[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1, 5));
+                two[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5, 1));
+                three[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10, 10));
+                superposition[i][j] = new Complex(one[i][j].getReal() + two[i][j].getReal() + three[i][j].getReal(), one[i][j].getImaginary() + two[i][j].getImaginary() + three[i][j].getImaginary());
+                // superposition[i][j] = superposition2D(N, -xRange + i * xStep, -yRange + j * yStep, gauss, coefficient);
             }
         }
 
@@ -87,9 +119,38 @@ public class Main {
             }
         }
 
-        Graph.draw2DIntensity(function, "pictures/intensity9PhaseOnly.bmp");
-        Graph.draw2DPhase(function, "pictures/phase9PhaseOnly.bmp");
-        Graph.draw2DPhaseSecondVersion(function, "pictures/phase9PhaseOnlyAnother.bmp");
+        Graph.draw2DIntensity(function, "pictures/intensitySuperpositionPhaseOnlyOutputByFresnel.bmp");
+        Graph.draw2DPhase(function, "pictures/phaseSuperpositionPhaseOnlyOutputByFresnel.bmp");
+    }
+
+    private static void transform2DPhaseOnlyFourier(int width, int height, double uRange, double vRange, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function, double stepU, double stepV) {
+        Complex[][] superposition = new Complex[width][height];
+        Complex[][] one = new Complex[width][height];
+        Complex[][] two = new Complex[width][height];
+        Complex[][] three = new Complex[width][height];
+
+        for (int i = 0; i < superposition.length; i++) {
+            for (int j = 0; j < superposition[0].length; j++) {
+                one[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1, 5));
+                two[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5, 1));
+                three[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10, 10));
+                superposition[i][j] = new Complex(one[i][j].getReal() + two[i][j].getReal() + three[i][j].getReal(), one[i][j].getImaginary() + two[i][j].getImaginary() + three[i][j].getImaginary());
+            }
+        }
+
+        Complex[][] phaseOnly = Graph.phaseOnlyEncode(superposition);
+
+        for (int i = 0; i < function.length; i++) {
+            for (int j = 0; j < function[0].length; j++) {
+                function[i][j] = FourierTransform2D.
+                        transform2DPhaseOnly(-uRange + i * stepU, -vRange + j * stepV, z, k,
+                                yMin, xMin,
+                                stepX, stepY, width, height, phaseOnly);
+            }
+        }
+
+        Graph.draw2DIntensity(function, "pictures/intensitySuperpositionPhaseOnlyOutputByFourier.bmp");
+        Graph.draw2DPhase(function, "pictures/phaseSuperpositionPhaseOnlyOutputByFourier.bmp");
     }
 
     private static void transform2D(int width, int height, int n, int m, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV) {
@@ -103,9 +164,8 @@ public class Main {
             }
         }
 
-        Graph.draw2DIntensity(function, "pictures/intensity5.bmp");
-        Graph.draw2DPhase(function, "pictures/phase5.bmp");
-        Graph.draw2DPhaseSecondVersion(function, "pictures/phase5Another.bmp");
+        Graph.draw2DIntensity(function, "pictures/intensityOutput.bmp");
+        Graph.draw2DPhase(function, "pictures/phaseOutput.bmp");
     }
 
     private static void transform2DPhase(int width, int height, int n, int m, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV) {
@@ -115,14 +175,13 @@ public class Main {
                 function[i][j] = FresnelTransform.transform2DPhase(u + i * stepU , v + j * stepV, z, k,
                         yMin, xMin,
                         stepX, stepY,
-                        n, m, gauss, width, height);
+                        n, m, gauss,
+                        width, height);
             }
         }
 
-        Graph.draw2DIntensity(function, "pictures/intensity5Phase.bmp");
-        Graph.draw2DPhase(function, "pictures/phase5Phase.bmp");
-        Graph.draw2DPhaseSecondVersion(function, "pictures/phase5PhaseAnother.bmp");
-
+        Graph.draw2DIntensity(function, "pictures/intensityModeArgumentOutput.bmp");
+        Graph.draw2DPhase(function, "pictures/phaseModeArgumentOutput.bmp");
     }
 
     private static void superposition(int width, int height, int N, double gauss, Complex[][] coefficient, double x, double y, double xStep, double yStep) {
@@ -130,16 +189,16 @@ public class Main {
 
         for (int i = 0; i < superposition.length; i++) {
             for (int j = 0; j < superposition[0].length; j++) {
-                superposition[i][j] = superposition2D(N, x + i * xStep, y + j * yStep, gauss, coefficient);
+                superposition[i][j] = new Complex(HermiteGaussianModes.hermiteGauss2D(3, 3, x, y, gauss));
+                // superposition[i][j] = superposition2D(N, x + i * xStep, y + j * yStep, gauss, coefficient);
             }
         }
 
-        Graph.draw2DIntensity(superposition, "pictures/intensity7.bmp");
-        Graph.draw2DPhase(superposition, "pictures/phase7.bmp");
-        Graph.draw2DPhaseSecondVersion(superposition, "pictures/phase7Another.bmp");
+        Graph.draw2DIntensity(superposition, "pictures/intensitySuperpositionInput.bmp");
+        Graph.draw2DPhase(superposition, "pictures/phaseSuperpositionInput.bmp");
     }
 
-    private static void transform2DSuperposition(int width, int height, int N, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV, Complex[][] coefficient) {
+    private static void transform2DSuperpositionFresnel(int width, int height, int N, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV, Complex[][] coefficient) {
 
         for (int i = 0; i < function.length; i++) {
             for (int j = 0; j < function[0].length; j++) {
@@ -149,8 +208,21 @@ public class Main {
             }
         }
 
-        Graph.draw2DIntensity(function, "pictures/intensity8.bmp");
-        Graph.draw2DPhase(function, "pictures/phase8.bmp");
-        Graph.draw2DPhaseSecondVersion(function, "pictures/phase8Another.bmp");
+        Graph.draw2DIntensity(function, "pictures/intensitySuperpositionOutputFresnel.bmp");
+        Graph.draw2DPhase(function, "pictures/phaseSuperpositionOutputFresnel.bmp");
+    }
+
+    private static void transform2DSuperpositionFourier(int width, int height, int N, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV, Complex[][] coefficient) {
+
+        for (int i = 0; i < function.length; i++) {
+            for (int j = 0; j < function[0].length; j++) {
+                function[i][j] = FourierTransform2D.transform2DSuperposition(u + i * stepU, v + j * stepV, z, k,
+                        yMin, xMin, stepX, stepY,
+                        gauss, width, height);
+            }
+        }
+
+        Graph.draw2DIntensity(function, "pictures/intensitySuperpositionOutput.bmp");
+        Graph.draw2DPhase(function, "pictures/phaseSuperpositionOutput.bmp");
     }
 }

@@ -105,5 +105,11 @@ public class AllTests {
         assertEquals(0.909297426, testValue.getImaginary(), 0.01);
     }
 
+    @Test
+    public void getArgumentTest() throws Exception {
+        Complex testValue = new Complex(-721, -498);
+        assertEquals(-2.537130631, testValue.getArgument(), 0.01);
+    }
+
 
 }

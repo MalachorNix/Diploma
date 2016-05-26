@@ -47,29 +47,6 @@ public class Graph {
             for (int j = 0; j < function[0].length; j++) {
                 phase[i][j] = function[i][j].getArgument();
 
-                if (phase[i][j] > maxPhase) {
-                    maxPhase = phase[i][j];
-                }
-
-                if (phase[i][j] < minPhase) {
-                    minPhase = phase[i][j];
-                }
-
-            }
-        }
-
-        writeImage(phase, maxPhase, minPhase, filename);
-    }
-
-    public static void draw2DPhaseSecondVersion(Complex[][] function, String filename) {
-        double[][] phase = new double[function.length][function[0].length];
-        double minPhase = Double.MAX_VALUE;
-        double maxPhase = Double.MIN_VALUE;
-
-        for (int i = 0; i < function.length; i++) {
-            for (int j = 0; j < function[0].length; j++) {
-                phase[i][j] = function[i][j].getArgument();
-
                 if (phase[i][j] < 0) {
                     phase[i][j] += 2 * Math.PI;
                 }
@@ -86,7 +63,6 @@ public class Graph {
         }
 
         writeImage(phase, 2 * Math.PI, 0, filename);
-        // writeImage(phase, maxPhase, minPhase, filename);
     }
 
     private static void writeImage(double[][] function, double max, double min, String filename) {

@@ -4,9 +4,9 @@ import model.HermiteGaussianModes;
 import org.apache.commons.math3.complex.Complex;
 
 
-public final class FourierTransform {
+public final class FourierTransform1D {
 
-    private FourierTransform() {
+    private FourierTransform1D() {
 
     }
 
