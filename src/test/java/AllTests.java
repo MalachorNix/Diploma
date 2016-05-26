@@ -1,8 +1,7 @@
 import controller.FresnelTransform;
-import model.HermiteGaussianModes;
+import model.GHMode;
 import model.HermitePolynomials;
 import org.apache.commons.math3.complex.Complex;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -11,12 +10,12 @@ import static org.junit.Assert.*;
 public class AllTests {
     @Test
     public void hermiteGauss1D() throws Exception {
-        assertEquals(1.06764987, HermiteGaussianModes.hermiteGauss1D(1, 2, 3), 0.01);
+        assertEquals(1.06764987, GHMode.hermiteGauss1D(1, 2, 3), 0.01);
     }
 
     @Test
     public void hermiteGauss2D() throws Exception {
-        assertEquals(0.407589, HermiteGaussianModes.hermiteGauss2D(1, 2, 3, 4, 5), 0.01);
+        assertEquals(0.407589, GHMode.hermiteGauss2D(1, 2, 3, 4, 5), 0.01);
     }
 
     @Test

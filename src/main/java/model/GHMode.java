@@ -1,8 +1,9 @@
 package model;
 
-public final class HermiteGaussianModes {
 
-    private HermiteGaussianModes() {
+public final class GHMode {
+
+    private GHMode() {
 
     }
 

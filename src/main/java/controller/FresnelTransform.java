@@ -1,9 +1,7 @@
 package controller;
 
-import model.HermiteGaussianModes;
+import model.GHMode;
 import org.apache.commons.math3.complex.Complex;
-
-import static controller.Superposition.superposition2D;
 
 public final class FresnelTransform {
 
@@ -100,7 +98,7 @@ public final class FresnelTransform {
         Complex multi;
 
         for (int i = 1; i < width; i++) {
-            Complex function = new Complex(HermiteGaussianModes.hermiteGauss1D(n, xMin + i * step, gauss));
+            Complex function = new Complex(GHMode.hermiteGauss1D(n, xMin + i * step, gauss));
             multi = integrand1D(function, u, z, k, xMin + i * step).multiply(step);
             sum.add(multi);
         }
@@ -118,7 +116,7 @@ public final class FresnelTransform {
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                Complex function = new Complex(HermiteGaussianModes.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
+                Complex function = new Complex(GHMode.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
 
                 multi = integrand2D(function, k, z, xMin + i * stepX, yMin + j * stepY, u, v).multiply(stepX).multiply(stepY);
 
@@ -140,7 +138,7 @@ public final class FresnelTransform {
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                Complex mode = new Complex(HermiteGaussianModes.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
+                Complex mode = new Complex(GHMode.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
 
                 multi = integrand2DPhase(mode, k, z, xMin + i * stepX, yMin + j * stepY, u, v).multiply(stepX).multiply(stepY);
 
@@ -186,9 +184,9 @@ public final class FresnelTransform {
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                one[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1, 5));
-                two[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5, 1));
-                three[i][j] = Complex.valueOf(HermiteGaussianModes.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10, 10));
+                one[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1, 5));
+                two[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5, 1));
+                three[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10, 10));
                 function[i][j] = new Complex(one[i][j].getReal() + two[i][j].getReal() + three[i][j].getReal(), one[i][j].getImaginary() + two[i][j].getImaginary() + three[i][j].getImaginary());
                 multi = integrand2D(function[i][j],
                         k, z, xMin + i * stepX, yMin + j * stepY, u, v).

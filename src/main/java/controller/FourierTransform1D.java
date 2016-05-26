@@ -1,6 +1,6 @@
 package controller;
 
-import model.HermiteGaussianModes;
+import model.GHMode;
 import org.apache.commons.math3.complex.Complex;
 
 
@@ -51,7 +51,7 @@ public final class FourierTransform1D {
         }
 
         for (int i = 1; i < x.length; i++) {
-            Complex function = new Complex(HermiteGaussianModes.hermiteGauss1D(n, x[i], gauss));
+            Complex function = new Complex(GHMode.hermiteGauss1D(n, x[i], gauss));
             multi = integrand(x[i], ksi, function).multiply(step);
             // sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
             sum.add(multi);
