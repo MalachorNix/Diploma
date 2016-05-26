@@ -54,9 +54,8 @@ public class Main {
 
 
         mode2D(dimension, n, m, xyRange, gauss);
-
-        transform2DByFresnel(dimension, uvRange, xyRange, n, m, gauss, z, k);
-        // transform2DPhase(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
+        fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
         // superposition(width, height, N, gauss, coefficient, -xRange, -yRange, xStep, yStep);
         // transform2DSuperpositionFresnel(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
 
@@ -78,7 +77,7 @@ public class Main {
     }
 
     /**
-     * Рисует интенсивность и фазу моды Гаусса-Эрмита.
+     * Рисует интенсивность и фазу 2D моды Гаусса-Эрмита.
      *
      * @param dimension Размерность выходного изображения dimension x dimension.
      * @param n         Порядок моды Гаусса-Эрмита.
@@ -101,7 +100,7 @@ public class Main {
     }
 
     /**
-     * Рисует интенсивность и фазу преобразования Френеля от моды 2D Гаусса-Эрмита.
+     * Рисует интенсивность и фазу преобразования Френеля от 2D моды Гаусса-Эрмита.
      *
      * @param dimension Размерность выходного изображения dimension x dimension.
      * @param uvRange   Диапазон значений по осям u и v, по которым рисуются изображения.
@@ -112,7 +111,7 @@ public class Main {
      * @param z         Расстояние.
      * @param k         Волновое число.
      */
-    private static void transform2DByFresnel(int dimension, double uvRange, double xyRange, int n, int m, double gauss, double z, double k) {
+    private static void fresnelTransform2D(int dimension, double uvRange, double xyRange, int n, int m, double gauss, double z, double k) {
 
         Complex[][] result = new Complex[dimension][dimension];
         double stepUV = 2 * uvRange / dimension;
@@ -129,6 +128,38 @@ public class Main {
 
         Graph.draw2DIntensity(result, "pictures/intensityFresnelGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
         Graph.draw2DPhase(result, "pictures/phaseFresnelGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
+    }
+
+    /**
+     * Рисует интенсивность и фазу чисто фазового поля преобразования Френеля от 2D моды Гаусса-Эрмита
+     * (от exp^(i * arg(mode)))
+     *
+     * @param dimension Размерность выходного изображения dimension x dimension.
+     * @param uvRange   Диапазон значений по осям u и v, по которым рисуются изображения.
+     * @param xyRange   Диапазон значений по осям x и y, по которым рисуются изображения.
+     * @param n         Порядок моды Гаусса-Эрмита.
+     * @param m         Порядок моды Гаусса-Эрмита.
+     * @param gauss     Гауссовый параметр.
+     * @param z         Расстояние.
+     * @param k         Волновое число.
+     */
+    private static void fresnelTransform2DPhaseOnly(int dimension, double uvRange, double xyRange, int n, int m, double gauss, double z, double k) {
+
+        Complex[][] result = new Complex[dimension][dimension];
+        double stepUV = 2 * uvRange / dimension;
+        double stepXY = 2 * xyRange / dimension;
+
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                result[i][j] = FresnelTransform.transform2DPhase(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                        -xyRange, -xyRange,
+                        stepXY, stepXY,
+                        n, m, gauss, dimension, dimension);
+            }
+        }
+
+        Graph.draw2DIntensity(result, "pictures/intensityFresnelPhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
+        Graph.draw2DPhase(result, "pictures/phaseFresnelPhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
     }
 
     private static void modesSum(int width, int height, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function) {
@@ -210,22 +241,6 @@ public class Main {
 
         Graph.draw2DIntensity(function, "pictures/intensitySuperpositionPhaseOnlyOutputByFourier.bmp");
         Graph.draw2DPhase(function, "pictures/phaseSuperpositionPhaseOnlyOutputByFourier.bmp");
-    }
-
-    private static void transform2DPhase(int width, int height, int n, int m, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV) {
-
-        for (int i = 0; i < function.length; i++) {
-            for (int j = 0; j < function[0].length; j++) {
-                function[i][j] = FresnelTransform.transform2DPhase(u + i * stepU, v + j * stepV, z, k,
-                        yMin, xMin,
-                        stepX, stepY,
-                        n, m, gauss,
-                        width, height);
-            }
-        }
-
-        Graph.draw2DIntensity(function, "pictures/intensityModeArgumentOutput.bmp");
-        Graph.draw2DPhase(function, "pictures/phaseModeArgumentOutput.bmp");
     }
 
     private static void superposition(int width, int height, int N, double gauss, Complex[][] coefficient, double x, double y, double xStep, double yStep) {
