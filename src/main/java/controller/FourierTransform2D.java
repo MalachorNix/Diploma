@@ -5,6 +5,72 @@ import org.apache.commons.math3.complex.Complex;
 
 public class FourierTransform2D {
 
+    public static Complex transform2D(double u, double v, double z, double k,
+                                      double yMin, double xMin,
+                                      double stepX, double stepY,
+                                      int n, int m, double gauss,
+                                      int width, int height) {
+
+        Complex first = firstMultiplier2DTransform(k, z);
+        Complex second = firstExponent(k, z);
+        Complex third = integral2D(u, v, z, k, yMin, xMin, stepX, stepY, n, m, gauss, width, height);
+        return first.multiply(second).multiply(third);
+    }
+
+    private static Complex firstMultiplier2DTransform(double k, double z) {
+        return Complex.I.multiply(-(k / (2 * Math.PI * z)));
+    }
+
+    private static Complex firstExponent(double k, double z) {
+        return Complex.I.multiply(k * z).exp();
+    }
+
+    private static Complex integral2D(double u, double v, double z, double k,
+                                      double yMin, double xMin,
+                                      double stepX, double stepY,
+                                      int n, int m, double gauss,
+                                      int width, int height) {
+
+        Complex sum = new Complex(0, 0);
+        Complex multi;
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                Complex function = new Complex(HermiteGaussianModes.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
+
+                multi = integrand2D(function, k, z, xMin + i * stepX, yMin + j * stepY, u, v).multiply(stepX).multiply(stepY);
+
+                sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
+            }
+        }
+
+        return sum;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public static Complex transform2DSuperposition(double u, double v, double z, double k,
                                                    double yMin, double xMin,
                                                    double stepX, double stepY,

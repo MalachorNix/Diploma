@@ -56,6 +56,7 @@ public class Main {
         mode2D(dimension, n, m, xyRange, gauss);
         fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
         fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        fourierTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
         // superposition(width, height, N, gauss, coefficient, -xRange, -yRange, xStep, yStep);
         // transform2DSuperpositionFresnel(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
 
@@ -160,6 +161,36 @@ public class Main {
 
         Graph.draw2DIntensity(result, "pictures/intensityFresnelPhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
         Graph.draw2DPhase(result, "pictures/phaseFresnelPhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
+    }
+
+    /**
+     * Рисует интенсивность и фазу преобразования Фурье от 2D моды Гаусса-Эрмита.
+     *
+     * @param dimension Размерность выходного изображения dimension x dimension.
+     * @param uvRange   Диапазон значений по осям u и v, по которым рисуются изображения.
+     * @param xyRange   Диапазон значений по осям x и y, по которым рисуются изображения.
+     * @param n         Порядок моды Гаусса-Эрмита.
+     * @param m         Порядок моды Гаусса-Эрмита.
+     * @param gauss     Гауссовый параметр.
+     * @param z         Расстояние.
+     * @param k         Волновое число.
+     */
+    private static void fourierTransform2D(int dimension, double uvRange, double xyRange, int n, int m, double gauss, double z, double k) {
+        Complex[][] result = new Complex[dimension][dimension];
+        double stepUV = 2 * uvRange / dimension;
+        double stepXY = 2 * xyRange / dimension;
+
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                result[i][j] = FresnelTransform.transform2D(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                        -xyRange, -xyRange,
+                        stepXY, stepXY,
+                        n, m, gauss, dimension, dimension);
+            }
+        }
+
+        Graph.draw2DIntensity(result, "pictures/intensityFourierGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
+        Graph.draw2DPhase(result, "pictures/phaseFourierGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
     }
 
     private static void modesSum(int width, int height, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function) {
