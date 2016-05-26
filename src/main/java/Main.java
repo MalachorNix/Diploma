@@ -44,19 +44,15 @@ public class Main {
             }
         }
 
-        /*uRange = vRange = 0.2;
-        yMin = xMin = -0.2;
-        stepY = -2 * yMin / height;
-        stepX = -2 * xMin / width;
-        gauss = 0.015;
-        stepU = 2 * uRange / width;
-        stepV = 2 * vRange / height;*/
-
-
         mode2D(dimension, n, m, xyRange, gauss);
         fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
         fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
+
+
         fourierTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        uvRange = 0.1;
+        fourierTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
+
         // superposition(width, height, N, gauss, coefficient, -xRange, -yRange, xStep, yStep);
         // transform2DSuperpositionFresnel(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
 
@@ -182,7 +178,7 @@ public class Main {
 
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                result[i][j] = FresnelTransform.transform2D(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                result[i][j] = FourierTransform2D.transform2D(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
                         -xyRange, -xyRange,
                         stepXY, stepXY,
                         n, m, gauss, dimension, dimension);
@@ -191,6 +187,38 @@ public class Main {
 
         Graph.draw2DIntensity(result, "pictures/intensityFourierGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
         Graph.draw2DPhase(result, "pictures/phaseFourierGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
+    }
+
+    /**
+     * Рисует интенсивность и фазу чисто фазового поля преобразования Фурье от 2D моды Гаусса-Эрмита
+     * (от exp^(i * arg(mode)))
+     *
+     * @param dimension Размерность выходного изображения dimension x dimension.
+     * @param uvRange   Диапазон значений по осям u и v, по которым рисуются изображения.
+     * @param xyRange   Диапазон значений по осям x и y, по которым рисуются изображения.
+     * @param n         Порядок моды Гаусса-Эрмита.
+     * @param m         Порядок моды Гаусса-Эрмита.
+     * @param gauss     Гауссовый параметр.
+     * @param z         Расстояние.
+     * @param k         Волновое число.
+     */
+    private static void fourierTransform2DPhaseOnly(int dimension, double uvRange, double xyRange, int n, int m, double gauss, double z, double k) {
+
+        Complex[][] result = new Complex[dimension][dimension];
+        double stepUV = 2 * uvRange / dimension;
+        double stepXY = 2 * xyRange / dimension;
+
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                result[i][j] = FourierTransform2D.transform2DPhaseOnly(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                        -xyRange, -xyRange,
+                        stepXY, stepXY,
+                        n, m, gauss, dimension, dimension);
+            }
+        }
+
+        Graph.draw2DIntensity(result, "pictures/intensityPhaseFourierGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
+        Graph.draw2DPhase(result, "pictures/phasePhaseFourierGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
     }
 
     private static void modesSum(int width, int height, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function) {
@@ -261,14 +289,14 @@ public class Main {
 
         Complex[][] phaseOnly = Graph.phaseOnlyEncode(superposition);
 
-        for (int i = 0; i < function.length; i++) {
+        /*for (int i = 0; i < function.length; i++) {
             for (int j = 0; j < function[0].length; j++) {
                 function[i][j] = FourierTransform2D.
                         transform2DPhaseOnly(-uRange + i * stepU, -vRange + j * stepV, z, k,
                                 yMin, xMin,
                                 stepX, stepY, width, height, phaseOnly);
             }
-        }
+        }*/
 
         Graph.draw2DIntensity(function, "pictures/intensitySuperpositionPhaseOnlyOutputByFourier.bmp");
         Graph.draw2DPhase(function, "pictures/phaseSuperpositionPhaseOnlyOutputByFourier.bmp");
@@ -302,7 +330,7 @@ public class Main {
         Graph.draw2DPhase(function, "pictures/phaseSuperpositionOutputFresnel.bmp");
     }
 
-    private static void transform2DSuperpositionFourier(int width, int height, int N, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV, Complex[][] coefficient) {
+    /*private static void transform2DSuperpositionFourier(int width, int height, int N, double z, double k, double yMin, double xMin, double stepY, double stepX, double gauss, double u, double v, Complex[][] function, double stepU, double stepV, Complex[][] coefficient) {
 
         for (int i = 0; i < function.length; i++) {
             for (int j = 0; j < function[0].length; j++) {
@@ -314,5 +342,5 @@ public class Main {
 
         Graph.draw2DIntensity(function, "pictures/intensitySuperpositionOutput.bmp");
         Graph.draw2DPhase(function, "pictures/phaseSuperpositionOutput.bmp");
-    }
+    }*/
 }

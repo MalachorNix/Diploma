@@ -17,6 +17,18 @@ public class FourierTransform2D {
         return first.multiply(second).multiply(third);
     }
 
+    public static Complex transform2DPhaseOnly(double u, double v, double z, double k,
+                                           double yMin, double xMin,
+                                           double stepX, double stepY,
+                                           int n, int m, double gauss,
+                                           int width, int height) {
+
+        Complex first = firstMultiplier2DTransform(k, z);
+        Complex second = firstExponent(k, z);
+        Complex third = integral2DPhase(u, v, z, k, yMin, xMin, stepX, stepY, n, m, gauss, width, height);
+        return first.multiply(second).multiply(third);
+    }
+
     private static Complex firstMultiplier2DTransform(double k, double z) {
         return Complex.I.multiply(-(k / (2 * Math.PI * z)));
     }
@@ -47,6 +59,33 @@ public class FourierTransform2D {
         return sum;
     }
 
+    private static Complex integral2DPhase(double u, double v, double z, double k,
+                                           double yMin, double xMin,
+                                           double stepX, double stepY,
+                                           int n, int m, double gauss,
+                                           int width, int height) {
+
+        Complex sum = new Complex(0, 0);
+        Complex multi;
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                Complex mode = new Complex(HermiteGaussianModes.hermiteGauss2D(n, m, xMin + i * stepX, yMin + j * stepY, gauss));
+
+                multi = integrand2DPhase(mode, k, z, xMin + i * stepX, yMin + j * stepY, u, v).multiply(stepX).multiply(stepY);
+
+                sum = new Complex(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
+            }
+        }
+
+        return sum;
+    }
+
+    private static Complex integrand2DPhase(Complex mode, double k, double z, double x, double y,
+                                            double u, double v) {
+        Complex phaseOnly = Complex.I.multiply(mode.getArgument()).exp();
+        return phaseOnly.multiply(Complex.I.multiply(-k / z * (x * u + y * v)).exp());
+    }
 
 
 
@@ -71,7 +110,10 @@ public class FourierTransform2D {
 
 
 
-    public static Complex transform2DSuperposition(double u, double v, double z, double k,
+
+
+
+    /*public static Complex transform2DSuperposition(double u, double v, double z, double k,
                                                    double yMin, double xMin,
                                                    double stepX, double stepY,
                                                    double gauss,
@@ -161,7 +203,7 @@ public class FourierTransform2D {
         }
 
         return sum;
-    }
+    }*/
 
     private static Complex integrand2D(Complex function, double k, double z, double x, double y, double u, double v) {
         return function.multiply(Complex.I.multiply(-k / z * (x * u + y * v)).exp());
