@@ -247,7 +247,7 @@ public final class FresnelTransform {
 
     public static Complex transformExponent2D(double k, double z, double x, double y,
                                               double u, double v) {
-        // return Complex.I.multiply(k * ((x - u) * (x - u) + (y - v) * (y - v)) / (2 * z)).exp();
-        return Complex.I.multiply(-k / z * (x * u + y * v)).exp();
+        return Complex.I.multiply(k * ((x - u) * (x - u) + (y - v) * (y - v)) / (2 * z)).exp();
+        // return Complex.I.multiply(-k / z * (x * u + y * v)).exp();
     }
 }

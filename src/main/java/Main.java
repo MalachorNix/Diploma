@@ -18,6 +18,7 @@ public class Main {
         // x, y ∈ [-B; B]
         double xRange, yRange;
         xRange = yRange = 1;
+        double xyRange = 1;
         double yMin, xMin; //Эти значения - границы для интеграла.
         yMin = xMin = -1;
         double z = 100; // Расстояние.
@@ -25,7 +26,7 @@ public class Main {
         double k = 2 * Math.PI / lambda; // Волновое число.
         double stepY = -2 * yMin / height;
         double stepX = -2 * xMin / width;
-        double gauss = 0.05; // Гауссовый параметр.
+        double gauss = 0.3; // Гауссовый параметр.
         Complex[][] function = new Complex[width][height];
         double stepU = 2 * uRange / width;
         double stepV = 2 * vRange / height;
@@ -37,7 +38,6 @@ public class Main {
         for (int i = 0; i < coefficient.length; i++) {
             for (int j = 0; j < coefficient[0].length; j++) {
                 coefficient[i][j] = new Complex(1, 1);
-                // coefficient[i][j] = new Complex(i, j);
             }
         }
 
@@ -49,20 +49,23 @@ public class Main {
         stepU = 2 * uRange / width;
         stepV = 2 * vRange / height;*/
 
-        // transform2D(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
+
+        mode(width, height, n, m, xyRange, gauss);
+
+        transform2D(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
         // transform2DPhase(width, height, n, m, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV);
-        superposition(width, height, N, gauss, coefficient, -xRange, -yRange, xStep, yStep);
+        // superposition(width, height, N, gauss, coefficient, -xRange, -yRange, xStep, yStep);
         // transform2DSuperpositionFresnel(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
 
         // transform2DPhaseOnlyFresnel(width, height, N, uRange, vRange, xRange, yRange, z, k, yMin, xMin, stepY, stepX, gauss, function, stepU, stepV, xStep, yStep, coefficient);
 
-        uRange = vRange = 2.5;
+        /*uRange = vRange = 2.5;
         yMin = xMin = -1;
         stepY = -2 * yMin / height;
         stepX = -2 * xMin / width;
         gauss = 0.015;
         stepU = 2 * uRange / width;
-        stepV = 2 * vRange / height;
+        stepV = 2 * vRange / height;*/
 
         // transform2DSuperpositionFourier(width, height, N, z, k, yMin, xMin, stepY, stepX, gauss, -uRange, -vRange, function, stepU, stepV, coefficient);
         // transform2DPhaseOnlyFourier(width, height, uRange, vRange, z, k, yMin, xMin, stepY, stepX, gauss, function, stepU, stepV);
@@ -70,6 +73,21 @@ public class Main {
 
 
         // modesSum(width, height, yMin, xMin, stepY, stepX, gauss, function);
+    }
+
+    private static void mode(int width, int height, int n, int m, double xyRange, double gauss) {
+        Complex[][] result = new Complex[width][height];
+        double stepX = 2 * xyRange / width;
+        double stepY = 2 * xyRange / height;
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                result[i][j] = new Complex(HermiteGaussianModes.hermiteGauss2D(n, m, -xyRange + i * stepX, -xyRange + j * stepY, gauss));
+            }
+        }
+
+        Graph.draw2DIntensity(result, "pictures/intensityGH" + n + m +" xy" + xyRange + "gauss " + gauss + ".bmp");
+        Graph.draw2DPhase(result, "pictures/phaseGH" + n + m +" xy" + xyRange + "gauss " + gauss + ".bmp");
     }
 
     private static void modesSum(int width, int height, double yMin, double xMin, double stepY, double stepX, double gauss, Complex[][] function) {
@@ -189,8 +207,8 @@ public class Main {
 
         for (int i = 0; i < superposition.length; i++) {
             for (int j = 0; j < superposition[0].length; j++) {
-                superposition[i][j] = new Complex(HermiteGaussianModes.hermiteGauss2D(3, 3, x, y, gauss));
-                // superposition[i][j] = superposition2D(N, x + i * xStep, y + j * yStep, gauss, coefficient);
+                // superposition[i][j] = new Complex(HermiteGaussianModes.hermiteGauss2D(3, 3, x, y, gauss));
+                superposition[i][j] = superposition2D(N, x + i * xStep, y + j * yStep, gauss, coefficient);
             }
         }
 
