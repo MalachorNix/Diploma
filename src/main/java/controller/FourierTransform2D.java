@@ -15,6 +15,7 @@ public class FourierTransform2D {
         Complex second = firstExponent(k, z);
         Complex third = integral2D(u, v, z, k, yMin, xMin, stepX, stepY, n, m, gauss, width, height);
         return first.multiply(second).multiply(third);
+        // return third.multiply(k / z);
     }
 
     public static Complex transform2DPhaseOnly(double u, double v, double z, double k,
@@ -27,6 +28,7 @@ public class FourierTransform2D {
         Complex second = firstExponent(k, z);
         Complex third = integral2DPhase(u, v, z, k, yMin, xMin, stepX, stepY, n, m, gauss, width, height);
         return first.multiply(second).multiply(third);
+        // return third;
     }
 
     private static Complex firstMultiplier2DTransform(double k, double z) {
@@ -84,6 +86,7 @@ public class FourierTransform2D {
     private static Complex integrand2DPhase(Complex mode, double k, double z, double x, double y,
                                             double u, double v) {
         Complex phaseOnly = Complex.I.multiply(mode.getArgument()).exp();
+        // return phaseOnly.multiply(Complex.I.multiply(k * ((x - u) * (x - u) + (y - v) * (y - v)) / (2 * z)).exp());
         return phaseOnly.multiply(Complex.I.multiply(-k / z * (x * u + y * v)).exp());
     }
 
@@ -113,7 +116,7 @@ public class FourierTransform2D {
 
 
 
-    /*public static Complex transform2DSuperposition(double u, double v, double z, double k,
+    public static Complex transform2DSuperposition(double u, double v, double z, double k,
                                                    double yMin, double xMin,
                                                    double stepX, double stepY,
                                                    double gauss,
@@ -203,7 +206,7 @@ public class FourierTransform2D {
         }
 
         return sum;
-    }*/
+    }
 
     private static Complex integrand2D(Complex function, double k, double z, double x, double y, double u, double v) {
         return function.multiply(Complex.I.multiply(-k / z * (x * u + y * v)).exp());

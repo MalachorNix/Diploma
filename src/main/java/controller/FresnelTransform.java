@@ -2,6 +2,7 @@ package controller;
 
 import model.GHMode;
 import org.apache.commons.math3.complex.Complex;
+import view.Graph;
 
 public final class FresnelTransform {
 
@@ -212,15 +213,36 @@ public final class FresnelTransform {
         Complex sum = new Complex(0, 0);
         Complex multi;
 
+        Complex[][] superposition = new Complex[width][height];
+        Complex[][] one = new Complex[width][height];
+        Complex[][] two = new Complex[width][height];
+        Complex[][] three = new Complex[width][height];
+        double[][] dop = new double[width][height];
+        Complex[][] dopResult = new Complex[width][height];
+        Complex[][] phase = new Complex[width][height];
+
+
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                multi = integrand2D(phaseOnly[i][j] /*new Complex(superposition2D(N, xMin + i * stepX, yMin + j * stepY, gauss, coefficient).getArgument())*/,
+
+                one[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1, 5));
+                two[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5, 1));
+                three[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10, 10));
+                superposition[i][j] = new Complex(one[i][j].getReal() + two[i][j].getReal() + three[i][j].getReal(), one[i][j].getImaginary() + two[i][j].getImaginary() + three[i][j].getImaginary());
+                phase[i][j] = Complex.I.multiply(superposition[i][j].getArgument()).exp();
+                dop[i][j] = Math.exp(-((xMin + i * stepX) * (xMin + i * stepX) + (yMin + j * stepY) * (yMin + j * stepY)) / (2 * 2 * 2));
+                dopResult[i][j] = phase[i][j].multiply(dop[i][j]);
+
+                multi = integrand2D(/*phaseOnly[i][j]*/ dopResult[i][j],
                         k, z, xMin + i * stepX, yMin + j * stepY, u, v).
                         multiply(stepX).multiply(stepY);
                 sum = new Complex(sum.getReal() + multi.getReal(),
                         sum.getImaginary() + multi.getImaginary());
             }
         }
+
+        Graph.draw2DIntensity(dopResult, "pictures/pik.bmp");
+        Graph.draw2DPhase(dopResult, "pictures/fik.bmp");
 
         return sum;
     }
@@ -238,7 +260,8 @@ public final class FresnelTransform {
                                             double u, double v) {
         Complex phaseOnly = Complex.I.multiply(mode.getArgument()).exp();
 
-        return transformExponent2D(k, z, x, y, u, v).multiply(phaseOnly);
+        return phaseOnly.multiply(transformExponent2D(k, z, x, y, u, v));
+        // return transformExponent2D(k, z, x, y, u, v).multiply(phaseOnly);
     }
 
     public static Complex transformExponent1D(double k, double z, double x, double u) {
