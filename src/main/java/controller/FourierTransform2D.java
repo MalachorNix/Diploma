@@ -200,7 +200,7 @@ public class FourierTransform2D {
                         k, z, xMin + i * stepX, yMin + j * stepY, u, v).
                         multiply(stepX).multiply(stepY);
 
-                sum = new Complex(sum.getReal() + multi.getReal(),
+                sum = Complex.valueOf(sum.getReal() + multi.getReal(),
                         sum.getImaginary() + multi.getImaginary());
             }
         }
