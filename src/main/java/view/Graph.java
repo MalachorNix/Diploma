@@ -32,6 +32,23 @@ public final class Graph {
         writeImage(intensity, maxAmplitude, minAmplitude, filename);
     }
 
+    /*public static void draw2DAmplitude(Complex[][] function, String filename) {
+        double[][] amplitude = new double[function.length][function[0].length];
+        double min = Double.MAX_VALUE;
+        double max = Double.MIN_VALUE;
+        for (int i = 0; i < function.length; i++) {
+            for (int j = 0; j < function[0].length; j++) {
+                if (amplitude[i][j] > max) {
+                    max = amplitude[i][j];
+                }
+                if (amplitude[i][j] < min) {
+                    min = amplitude[i][j];
+                }
+            }
+        }
+        writeImage(amplitude, max, min, filename);
+    }*/
+
     public static void draw2DPhase(Complex[][] function, String filename) {
         double[][] phase = new double[function.length][function[0].length];
         for (int i = 0; i < function.length; i++) {
@@ -45,7 +62,7 @@ public final class Graph {
         writeImage(phase, 2 * Math.PI, 0, filename);
     }
 
-    private static void writeImage(double[][] function, double max, double min, String filename) {
+    public static void writeImage(double[][] function, double max, double min, String filename) {
         double stepNorm = (max - min) / 255;
         BufferedImage image = new BufferedImage(function.length, function[0].length, BufferedImage.TYPE_INT_RGB);
         for (int i = 0; i < function.length; i++) {
