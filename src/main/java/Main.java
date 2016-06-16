@@ -62,6 +62,7 @@ public class Main {
                 }
             }
         }
+
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
                 normAmplitude[i][j] = normFrom0to1(amplitude[i][j], min, max);
