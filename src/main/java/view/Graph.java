@@ -10,7 +10,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
-import static controller.Superposition.superposition2D;
 
 public class Graph {
 
@@ -125,7 +124,7 @@ public class Graph {
         return result;
     }
 
-    public static void draw2DPhaseOnlyIntensity() {
+    /*public static void draw2DPhaseOnlyIntensity() {
         int width = 128, height = 128; // Размеры изображения.
         int N = 3; // Порядок полиномов Эрмита.
         int n = 3, m = 3;
@@ -180,6 +179,6 @@ public class Graph {
 
         draw2DIntensity(function, "intensityPhaseOnly.bmp");
         draw2DPhase(function, "phasePhaseOnly.bmp");
-    }
+    }*/
 
 }

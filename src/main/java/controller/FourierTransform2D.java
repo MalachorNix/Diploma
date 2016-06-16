@@ -87,33 +87,7 @@ public class FourierTransform2D {
         return phaseOnly.multiply(Complex.I.multiply(-k / z * (x * u + y * v)).exp());
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /*public static Complex transform2DSuperposition(double u, double v, double z, double k,
+    public static Complex transform2DSuperposition(double u, double v, double z, double k,
                                                    double yMin, double xMin,
                                                    double stepX, double stepY,
                                                    double gauss,
@@ -157,17 +131,6 @@ public class FourierTransform2D {
         return sum;
     }
 
-
-
-
-
-
-
-
-
-
-
-
     public static Complex transform2DPhaseOnly(double u, double v, double z, double k,
                                                double yMin,
                                                double xMin,
@@ -203,7 +166,7 @@ public class FourierTransform2D {
         }
 
         return sum;
-    }*/
+    }
 
     private static Complex integrand2D(Complex function, double k, double z, double x, double y, double u, double v) {
         return function.multiply(Complex.I.multiply(-k / z * (x * u + y * v)).exp());

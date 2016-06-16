@@ -110,5 +110,20 @@ public class AllTests {
         assertEquals(-2.537130631, testValue.getArgument(), 0.01);
     }
 
+    @Test
+    public void testExp() throws Exception {
+        Complex test = Complex.I.multiply(3).exp();
+        assertEquals(-0.989992496600, test.getReal(), 0.001);
+        assertEquals(0.14112000805, test.getImaginary(), 0.001);
+        assertEquals(3, test.getArgument(), 0.001);
+
+        test = Complex.I.multiply(4).exp();
+        assertEquals(-2.28318, test.getArgument(), 0.001);
+        test = Complex.valueOf(0.5).exp();
+        assertEquals(0, test.getArgument(), 0.001);
+
+
+    }
+
 
 }
