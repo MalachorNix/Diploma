@@ -19,32 +19,44 @@ public class Main {
         double lambda = 0.00063; // Длина волны.
         double k = 2 * Math.PI / lambda; // Волновое число.
         double gauss = 0.3; // Гауссовый параметр.
-        double threshold = 0.66;
+        double threshold = 1;
+        double sigma0 = 0.6;
 
         mode2D(dimension, xyRange, n, m, gauss);
-
-        /*fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
         fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
         fourierTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
         fourierTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
         fresnelTransform2DSuperposition(dimension, uvRange, xyRange, gauss, z, k);
         fresnelTransform2DSuperpositionPhaseOnly(dimension, uvRange, xyRange, gauss, z, k);
         transform2DSuperpositionFourier(dimension, uvRange, xyRange, gauss, z, k);
-        transform2DPhaseOnlyFourier(dimension, uvRange, xyRange, gauss, z, k);*/
+        transform2DPhaseOnlyFourier(dimension, uvRange, xyRange, gauss, z, k);
+        expAndMode(dimension, xyRange, n, m, gauss, sigma0);
+        partialCoding(dimension, xyRange, n, m, gauss, threshold, sigma0);
+        pcSuper(dimension, xyRange, gauss, threshold, sigma0);
 
-
-        partialCoding(dimension, xyRange, n, m, gauss, threshold);
-        // pcSuper(dimension, xyRange, gauss, threshold);
-
-        // partialCodingRectangularJ(dimension, xyRange, n, m, gauss, threshold);
-        // partialCodingRectangularI(dimension, xyRange, n, m, gauss, threshold);
-        // pcSuperRectangularI(dimension, xyRange, gauss, threshold);
     }
 
-    private static void partialCoding(int dimension, double xyRange, int n, int m, double gauss, double threshold) {
+    private static void expAndMode(int dimension, double xyRange, int n, int m, double gauss, double sigma0) {
+        Complex[][] exponent = new Complex[dimension][dimension];
+        double step = 2 * xyRange / dimension;
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                double x = -xyRange + i * step;
+                double y = -xyRange + j * step;
+                double exp = Math.exp(-(x * x + y * y) / (2 * sigma0 * sigma0));
+                Complex mode = new Complex(hermiteGauss2D(n, m, x, y, gauss));
+                Complex phaseOnly = Complex.I.multiply(mode.getArgument()).exp();
+                exponent[i][j] = Complex.valueOf(exp).multiply(phaseOnly);
+            }
+        }
+        Graph.draw2DIntensity(exponent, "pictures/intensityEXP.bmp");
+        Graph.draw2DPhase(exponent, "pictures/phaseEXP.bmp");
+    }
+
+    private static void partialCoding(int dimension, double xyRange, int n, int m, double gauss, double threshold, double sigma0) {
         double step = 2 * xyRange / dimension;
         double[][] amplitude = new double[dimension][dimension];
-        double[][] normAmplitude = new double[dimension][dimension];
         Complex[][] picture = new Complex[dimension][dimension];
         Complex[][] mode = new Complex[dimension][dimension];
         double min = Double.MAX_VALUE;
@@ -62,15 +74,14 @@ public class Main {
                 }
             }
         }
-
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                normAmplitude[i][j] = normFrom0to1(amplitude[i][j], min, max);
-                double sigma0 = 0.05;
-                double exp = -( (-xyRange + i * step) * (-xyRange + i * step) + (-xyRange + j * step) * (-xyRange + j * step) ) / (2 * sigma0 * sigma0);
-                if (normAmplitude[i][j] >= threshold) {
+                double normAmplitude = normFrom0to1(amplitude[i][j], min, max);
+                double x = -xyRange + i * step;
+                double y = -xyRange + j * step;
+                double exp = Math.exp(-(x * x + y * y) / (2 * sigma0 * sigma0));
+                if (normAmplitude >= threshold) {
                     picture[i][j] = Complex.I.multiply(mode[i][j].getArgument()).exp();
-
                     picture[i][j] = picture[i][j].multiply(exp);
                 } else {
                     phi1 = mode[i][j].getArgument() + Math.acos(amplitude[i][j]);
@@ -78,19 +89,18 @@ public class Main {
                     Complex first = Complex.I.multiply(phi1).exp();
                     Complex second = Complex.I.multiply(phi2).exp();
                     picture[i][j] = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
-
                     picture[i][j] = picture[i][j].multiply(exp);
                 }
             }
         }
-        // mode2D(dimension, xyRange, n, m, gauss);
         Graph.draw2DIntensity(picture, "pictures/ВЫХОД partInt" + "threshold" + threshold + ".bmp");
         Graph.draw2DPhase(picture, "pictures/ВЫХОД partPhase" + "threshold" + threshold + ".bmp");
     }
 
-    private static void pcSuper(int dimension, double xyRange, double gauss, double threshold) {
+    private static void pcSuper(int dimension, double xyRange, double gauss, double threshold, double sigma0) {
         Complex[][] superposition = new Complex[dimension][dimension];
         Complex[][] picture = new Complex[dimension][dimension];
+        Complex[][] superExp = new Complex[dimension][dimension];
         double[][] amplitude = new double[dimension][dimension];
         double[][] normAmplitude = new double[dimension][dimension];
         double stepXY = 2 * xyRange / dimension;
@@ -99,9 +109,11 @@ public class Main {
         double phi1, phi2;
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                Complex one = Complex.valueOf(hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1/*, 5*/));
-                Complex two = Complex.valueOf(hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5/*, 1*/));
-                Complex three = Complex.valueOf(hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10/*, 10*/));
+                double x = -xyRange + i * stepXY;
+                double y = -xyRange + j * stepXY;
+                Complex one = Complex.valueOf(hermiteGauss2D(6, 0, x, y, gauss)).multiply(Complex.valueOf(1));
+                Complex two = Complex.valueOf(hermiteGauss2D(0, 6, x, y, gauss)).multiply(Complex.valueOf(5));
+                Complex three = Complex.valueOf(hermiteGauss2D(3, 3, x, y, gauss)).multiply(Complex.valueOf(10));
                 superposition[i][j] = Complex.valueOf(one.getReal() + two.getReal() + three.getReal(), one.getImaginary() + two.getImaginary() + three.getImaginary());
                 amplitude[i][j] = superposition[i][j].abs();
                 if (amplitude[i][j] > max) {
@@ -114,21 +126,27 @@ public class Main {
         }
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
+                double x = -xyRange + i * stepXY;
+                double y = -xyRange + j * stepXY;
+                double exp = Math.exp(-(x * x + y * y) / (2 * sigma0 * sigma0));
                 normAmplitude[i][j] = normFrom0to1(amplitude[i][j], min, max);
                 if (normAmplitude[i][j] >= threshold) {
                     picture[i][j] = Complex.I.multiply(superposition[i][j].getArgument()).exp();
+                    superExp[i][j] = picture[i][j].multiply(exp);
                 } else {
                     phi1 = superposition[i][j].getArgument() + Math.acos(amplitude[i][j]);
                     phi2 = superposition[i][j].getArgument() - Math.acos(amplitude[i][j]);
                     Complex first = Complex.I.multiply(phi1).exp();
                     Complex second = Complex.I.multiply(phi2).exp();
                     picture[i][j] = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
+                    superExp[i][j] = picture[i][j].multiply(exp);
                 }
             }
         }
-        superposition(dimension, xyRange, gauss);
-        Graph.draw2DIntensity(picture, "pictures/partIntSuper" + "threshold" + threshold + ".bmp");
-        Graph.draw2DPhase(picture, "pictures/partPhaseSuper" + "threshold" + threshold + ".bmp");
+        Graph.draw2DIntensity(picture, "pictures/IntSuper" + "threshold" + threshold + ".bmp");
+        Graph.draw2DPhase(picture, "pictures/PhaseSuper" + "threshold" + threshold + ".bmp");
+        Graph.draw2DIntensity(superExp, "pictures/IntSuperExp" + "threshold" + threshold + ".bmp");
+        Graph.draw2DPhase(superExp, "pictures/PhaseSuperExp" + "threshold" + threshold + ".bmp");
     }
 
     private static void pcSuperRectangularI(int dimension, double xyRange, double gauss, double threshold) {
@@ -289,22 +307,21 @@ public class Main {
      * @param gauss     Гауссовый параметр.
      */
     private static void mode2D(int dimension, double xyRange, int n, int m, double gauss) {
-        Complex[][] result = new Complex[dimension][dimension];
+        Complex[][] mode = new Complex[dimension][dimension];
         Complex[][] phaseOnly = new Complex[dimension][dimension];
         double step = 2 * xyRange / dimension;
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                result[i][j] = new Complex(hermiteGauss2D(n, m, -xyRange + i * step, -xyRange + j * step, gauss));
-                phaseOnly[i][j] = Complex.I.multiply(result[i][j].getArgument()).exp();
-                double exp = -( (-xyRange + i * step) * (-xyRange + i * step) + (-xyRange + j * step) * (-xyRange + j * step) ) / (2 * 0.1 * 0.1);
-                // result[i][j] = result[i][j].multiply(exp);
-                phaseOnly[i][j] = phaseOnly[i][j].multiply(exp);
+                double x = -xyRange + i * step;
+                double y = -xyRange + j * step;
+                mode[i][j] = new Complex(hermiteGauss2D(n, m, x, y, gauss));
+                phaseOnly[i][j] = Complex.I.multiply(mode[i][j].getArgument()).exp();
             }
         }
         Graph.draw2DIntensity(phaseOnly, "pictures/intensityPhaseGH" + n + m + " xy" + xyRange + " sigma " + gauss + ".bmp");
         Graph.draw2DPhase(phaseOnly, "pictures/phasePhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + ".bmp");
-        Graph.draw2DIntensity(result, "pictures/intensityGH" + n + m + " xy" + xyRange + " sigma " + gauss + ".bmp");
-        Graph.draw2DPhase(result, "pictures/phaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + ".bmp");
+        Graph.draw2DIntensity(mode, "pictures/intensityGH" + n + m + " xy" + xyRange + " sigma " + gauss + ".bmp");
+        Graph.draw2DPhase(mode, "pictures/phaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + ".bmp");
     }
 
     /**
