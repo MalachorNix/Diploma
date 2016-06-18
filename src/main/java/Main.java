@@ -1,4 +1,4 @@
-import controller.FourierTransform2D;
+import controller.FourierTransform;
 import controller.FresnelTransform;
 import org.apache.commons.math3.complex.Complex;
 import view.Graph;
@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
 
         int dimension = 128; // Размеры изображения.
-        int n = 3, m = 3; // Порядки моды для формулы 5.
+        int n = 3, m = 3; // Порядки моды.
         // u, v ∈ [-A; A]
         double uvRange = 1;
         // x, y ∈ [-B; B]
@@ -19,7 +19,7 @@ public class Main {
         double lambda = 0.00063; // Длина волны.
         double k = 2 * Math.PI / lambda; // Волновое число.
         double gauss = 0.3; // Гауссовый параметр.
-        double threshold = 1;
+        double threshold = 0.66;
         double sigma0 = 0.6;
 
         mode2D(dimension, xyRange, n, m, gauss);
@@ -34,7 +34,6 @@ public class Main {
         expAndMode(dimension, xyRange, n, m, gauss, sigma0);
         partialCoding(dimension, xyRange, n, m, gauss, threshold, sigma0);
         pcSuper(dimension, xyRange, gauss, threshold, sigma0);
-
     }
 
     private static void expAndMode(int dimension, double xyRange, int n, int m, double gauss, double sigma0) {
@@ -61,7 +60,6 @@ public class Main {
         Complex[][] mode = new Complex[dimension][dimension];
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
-        double phi1, phi2;
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
                 mode[i][j] = Complex.valueOf(hermiteGauss2D(n, m, -xyRange + i * step, -xyRange + j * step, gauss));
@@ -84,11 +82,7 @@ public class Main {
                     picture[i][j] = Complex.I.multiply(mode[i][j].getArgument()).exp();
                     picture[i][j] = picture[i][j].multiply(exp);
                 } else {
-                    phi1 = mode[i][j].getArgument() + Math.acos(amplitude[i][j]);
-                    phi2 = mode[i][j].getArgument() - Math.acos(amplitude[i][j]);
-                    Complex first = Complex.I.multiply(phi1).exp();
-                    Complex second = Complex.I.multiply(phi2).exp();
-                    picture[i][j] = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
+                    picture[i][j] = anotherPartCoding(mode[i][j], amplitude[i][j]);
                     picture[i][j] = picture[i][j].multiply(exp);
                 }
             }
@@ -106,7 +100,6 @@ public class Main {
         double stepXY = 2 * xyRange / dimension;
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
-        double phi1, phi2;
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
                 double x = -xyRange + i * stepXY;
@@ -134,11 +127,7 @@ public class Main {
                     picture[i][j] = Complex.I.multiply(superposition[i][j].getArgument()).exp();
                     superExp[i][j] = picture[i][j].multiply(exp);
                 } else {
-                    phi1 = superposition[i][j].getArgument() + Math.acos(amplitude[i][j]);
-                    phi2 = superposition[i][j].getArgument() - Math.acos(amplitude[i][j]);
-                    Complex first = Complex.I.multiply(phi1).exp();
-                    Complex second = Complex.I.multiply(phi2).exp();
-                    picture[i][j] = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
+                    picture[i][j] = anotherPartCoding(superposition[i][j], amplitude[i][j]);
                     superExp[i][j] = picture[i][j].multiply(exp);
                 }
             }
@@ -149,148 +138,15 @@ public class Main {
         Graph.draw2DPhase(superExp, "pictures/PhaseSuperExp" + "threshold" + threshold + ".bmp");
     }
 
-    private static void pcSuperRectangularI(int dimension, double xyRange, double gauss, double threshold) {
-        Complex[][] superposition = new Complex[dimension][dimension];
-        Complex[][] picture = new Complex[2 * dimension][dimension];
-        double[][] amplitude = new double[dimension][dimension];
-        double[][] normAmplitude = new double[dimension][dimension];
-        double stepXY = 2 * xyRange / dimension;
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
+    private static Complex anotherPartCoding(Complex function, double amplitude) {
         double phi1, phi2;
-        Complex temp;
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
-                Complex one = Complex.valueOf(hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1, 5));
-                Complex two = Complex.valueOf(hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5, 1));
-                Complex three = Complex.valueOf(hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10, 10));
-                superposition[i][j] = Complex.valueOf(one.getReal() + two.getReal() + three.getReal(), one.getImaginary() + two.getImaginary() + three.getImaginary());
-                amplitude[i][j] = superposition[i][j].abs();
-                if (amplitude[i][j] > max) {
-                    max = amplitude[i][j];
-                }
-                if (amplitude[i][j] < min) {
-                    min = amplitude[i][j];
-                }
-            }
-        }
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
-                normAmplitude[i][j] = normFrom0to1(amplitude[i][j], min, max);
-                if (normAmplitude[i][j] >= threshold) {
-                    temp = Complex.I.multiply(superposition[i][j].getArgument()).exp();
-                    picture[2 * i][j] = temp;
-                    picture[2 * i + 1][j] = temp;
-                } else {
-                    phi1 = superposition[i][j].getArgument() + Math.acos(amplitude[i][j]);
-                    phi2 = superposition[i][j].getArgument() - Math.acos(amplitude[i][j]);
-                    Complex first = Complex.I.multiply(phi1).exp();
-                    Complex second = Complex.I.multiply(phi2).exp();
-                    // picture[i][j] = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
-                    picture[2 * i][j] = first;
-                    // picture[i][2 * j] = temp;
-                    picture[2 * i + 1][j] = second;
-                    // picture[i][2 * j + 1] = temp;
-                }
-            }
-        }
-        superposition(dimension, xyRange, gauss);
-        Graph.draw2DIntensity(picture, "pictures/partIntSuper" + "threshold" + threshold + ".bmp");
-        Graph.draw2DPhase(picture, "pictures/partPhaseSuper" + "threshold" + threshold + ".bmp");
-    }
-
-    private static void partialCodingRectangularJ(int dimension, double xyRange, int n, int m, double gauss, double threshold) {
-        double step = 2 * xyRange / dimension;
-        double[][] amplitude = new double[dimension][dimension];
-        double[][] normAmplitude = new double[dimension][dimension];
-        Complex[][] picture = new Complex[dimension][2 * dimension];
-        Complex[][] mode = new Complex[dimension][dimension];
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-        double phi1, phi2;
-        Complex temp;
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
-                mode[i][j] = Complex.valueOf(hermiteGauss2D(n, m, -xyRange + i * step, -xyRange + j * step, gauss));
-                amplitude[i][j] = mode[i][j].abs();
-                if (amplitude[i][j] > max) {
-                    max = amplitude[i][j];
-                }
-                if (amplitude[i][j] < min) {
-                    min = amplitude[i][j];
-                }
-            }
-        }
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
-                normAmplitude[i][j] = normFrom0to1(amplitude[i][j], min, max);
-                if (normAmplitude[i][j] >= threshold) {
-                    temp = Complex.I.multiply(mode[i][j].getArgument()).exp();
-                    picture[i][2 * j] = temp;
-                    picture[i][2 * j + 1] = temp;
-                } else {
-                    phi1 = mode[i][j].getArgument() + Math.acos(amplitude[i][j]);
-                    phi2 = mode[i][j].getArgument() - Math.acos(amplitude[i][j]);
-                    Complex first = Complex.I.multiply(phi1).exp();
-                    Complex second = Complex.I.multiply(phi2).exp();
-                    // temp = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
-                    picture[i][2 * j] = first;
-                    // picture[i][2 * j] = temp;
-                    picture[i][2 * j + 1] = second;
-                    // picture[i][2 * j + 1] = temp;
-                }
-            }
-        }
-        mode2D(dimension, xyRange, n, m, gauss);
-        Graph.draw2DIntensity(picture, "pictures/partInt" + "threshold" + threshold + "Rect.bmp");
-        Graph.draw2DPhase(picture, "pictures/partPhase" + "threshold" + threshold + "Rect.bmp");
-    }
-
-    private static void partialCodingRectangularI(int dimension, double xyRange, int n, int m, double gauss, double threshold) {
-        double step = 2 * xyRange / dimension;
-        double[][] amplitude = new double[dimension][dimension];
-        double[][] normAmplitude = new double[dimension][dimension];
-        Complex[][] picture = new Complex[2 * dimension][dimension];
-        Complex[][] mode = new Complex[dimension][dimension];
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-        double phi1, phi2;
-        Complex temp;
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
-                mode[i][j] = Complex.valueOf(hermiteGauss2D(n, m, -xyRange + i * step, -xyRange + j * step, gauss));
-                amplitude[i][j] = mode[i][j].abs();
-                if (amplitude[i][j] > max) {
-                    max = amplitude[i][j];
-                }
-                if (amplitude[i][j] < min) {
-                    min = amplitude[i][j];
-                }
-            }
-        }
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
-                normAmplitude[i][j] = normFrom0to1(amplitude[i][j], min, max);
-                if (normAmplitude[i][j] >= threshold) {
-                    temp = Complex.I.multiply(mode[i][j].getArgument()).exp();
-                    picture[2 * i][j] = temp;
-                    picture[2 * i + 1][j] = temp;
-                } else {
-                    phi1 = mode[i][j].getArgument() + Math.acos(amplitude[i][j]);
-                    phi2 = mode[i][j].getArgument() - Math.acos(amplitude[i][j]);
-                    Complex first = Complex.I.multiply(phi1).exp();
-                    Complex second = Complex.I.multiply(phi2).exp();
-                    // temp = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
-                    picture[2 * i][j] = first;
-                    // picture[i][2 * j] = temp;
-                    picture[2 * i + 1][j] = second;
-                    // picture[i][2 * j + 1] = temp;
-                }
-            }
-        }
-        mode2D(dimension, xyRange, n, m, gauss);
-        Graph.draw2DIntensity(picture, "pictures/partInt" + "threshold" + threshold + "Rect.bmp");
-        Graph.draw2DPhase(picture, "pictures/partPhase" + "threshold" + threshold + "Rect.bmp");
+        Complex picture;
+        phi1 = function.getArgument() + Math.acos(amplitude);
+        phi2 = function.getArgument() - Math.acos(amplitude);
+        Complex first = Complex.I.multiply(phi1).exp();
+        Complex second = Complex.I.multiply(phi2).exp();
+        picture = Complex.valueOf(first.getReal() + second.getReal(), first.getImaginary() + second.getImaginary());
+        return picture;
     }
 
     private static double normFrom0to1(double x, double xMin, double xMax) {
@@ -399,7 +255,7 @@ public class Main {
 
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                result[i][j] = FourierTransform2D.transform2D(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                result[i][j] = FourierTransform.transform2D(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
                         -xyRange, -xyRange,
                         stepXY, stepXY,
                         n, m, gauss, dimension, dimension);
@@ -431,7 +287,7 @@ public class Main {
 
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                result[i][j] = FourierTransform2D.transform2DPhaseOnly(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                result[i][j] = FourierTransform.transform2DPhaseOnly(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
                         -xyRange, -xyRange,
                         stepXY, stepXY,
                         n, m, gauss, dimension, dimension);
@@ -455,9 +311,9 @@ public class Main {
         double stepXY = 2 * xyRange / dimension;
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                Complex one = Complex.valueOf(hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1/*, 5*/));
-                Complex two = Complex.valueOf(hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5/*, 1*/));
-                Complex three = Complex.valueOf(hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10/*, 10*/));
+                Complex one = Complex.valueOf(hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1));
+                Complex two = Complex.valueOf(hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5));
+                Complex three = Complex.valueOf(hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10));
                 result[i][j] = Complex.valueOf(one.getReal() + two.getReal() + three.getReal(), one.getImaginary() + two.getImaginary() + three.getImaginary());
                 phaseOnly[i][j] = Complex.I.multiply(result[i][j].getArgument()).exp();
             }
@@ -510,9 +366,9 @@ public class Main {
         Complex[][] three = new Complex[dimension][dimension];
         for (int i = 0; i < superposition.length; i++) {
             for (int j = 0; j < superposition[0].length; j++) {
-                one[i][j] = Complex.valueOf(hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1, 5));
-                two[i][j] = Complex.valueOf(hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5, 1));
-                three[i][j] = Complex.valueOf(hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10, 10));
+                one[i][j] = Complex.valueOf(hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1));
+                two[i][j] = Complex.valueOf(hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5));
+                three[i][j] = Complex.valueOf(hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10));
                 superposition[i][j] = Complex.valueOf(one[i][j].getReal() + two[i][j].getReal() + three[i][j].getReal(), one[i][j].getImaginary() + two[i][j].getImaginary() + three[i][j].getImaginary());
             }
         }
@@ -527,7 +383,7 @@ public class Main {
 
         for (int i = 0; i < function.length; i++) {
             for (int j = 0; j < function[0].length; j++) {
-                function[i][j] = FourierTransform2D.transform2DSuperposition(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                function[i][j] = FourierTransform.transform2DSuperposition(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
                         -xyRange, -xyRange, stepXY, stepXY,
                         gauss, dimension, dimension);
             }
@@ -549,7 +405,7 @@ public class Main {
 
         for (int i = 0; i < function.length; i++) {
             for (int j = 0; j < function[0].length; j++) {
-                function[i][j] = FourierTransform2D.
+                function[i][j] = FourierTransform.
                         transform2DPhaseOnly(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
                                 -xyRange, -xyRange,
                                 stepXY, stepXY, dimension, dimension, phaseOnly);

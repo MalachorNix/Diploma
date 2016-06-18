@@ -72,9 +72,9 @@ public final class FresnelTransform {
         Complex sum = new Complex(0, 0);
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                Complex one = Complex.valueOf(GHMode.hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1, 5));
-                Complex two = Complex.valueOf(GHMode.hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5, 1));
-                Complex three = Complex.valueOf(GHMode.hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10, 10));
+                Complex one = Complex.valueOf(GHMode.hermiteGauss2D(6, 0, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(1));
+                Complex two = Complex.valueOf(GHMode.hermiteGauss2D(0, 6, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(5));
+                Complex three = Complex.valueOf(GHMode.hermiteGauss2D(3, 3, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss)).multiply(Complex.valueOf(10));
                 Complex function = Complex.valueOf(one.getReal() + two.getReal() + three.getReal(), one.getImaginary() + two.getImaginary() + three.getImaginary());
                 Complex multi = integrand2D(function, k, z, -xyRange + i * stepXY, -xyRange + j * stepXY, u, v).
                         multiply(stepXY * stepXY);

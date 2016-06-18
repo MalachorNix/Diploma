@@ -3,7 +3,7 @@ package controller;
 import model.GHMode;
 import org.apache.commons.math3.complex.Complex;
 
-public class FourierTransform2D {
+public class FourierTransform {
 
     public static Complex transform2D(double u, double v, double z, double k,
                                       double yMin, double xMin,
@@ -100,11 +100,11 @@ public class FourierTransform2D {
         return first.multiply(second).multiply(third);
     }
 
-    public static Complex integral2DSuperposition(double u, double v, double z, double k,
-                                                  double yMin, double xMin,
-                                                  double stepX, double stepY,
-                                                  double gauss,
-                                                  int width, int height) {
+    private static Complex integral2DSuperposition(double u, double v, double z, double k,
+                                                   double yMin, double xMin,
+                                                   double stepX, double stepY,
+                                                   double gauss,
+                                                   int width, int height) {
 
         Complex sum = new Complex(0, 0);
         Complex multi;
@@ -116,9 +116,9 @@ public class FourierTransform2D {
 
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                one[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1, 5));
-                two[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5, 1));
-                three[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10, 10));
+                one[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(6, 0, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(1));
+                two[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(0, 6, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(5));
+                three[i][j] = Complex.valueOf(GHMode.hermiteGauss2D(3, 3, xMin + i * stepX, yMin + j * stepY, gauss)).multiply(new Complex(10));
                 function[i][j] = new Complex(one[i][j].getReal() + two[i][j].getReal() + three[i][j].getReal(), one[i][j].getImaginary() + two[i][j].getImaginary() + three[i][j].getImaginary());
                 multi = integrand2D(function[i][j],
                         k, z, xMin + i * stepX, yMin + j * stepY, u, v).
