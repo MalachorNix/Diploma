@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class Graph {
 
-    public static void draw2DIntensity(Complex[][] function, String filename) {
+    public static int[][] draw2DIntensity(Complex[][] function, String filename) {
         double[][] intensity = new double[function.length][function[0].length];
         double minAmplitude = Double.MAX_VALUE;
         double maxAmplitude = Double.MIN_VALUE;
@@ -31,11 +31,11 @@ public class Graph {
             }
         }
 
-        writeImage(intensity, maxAmplitude, minAmplitude, filename);
+        return writeImage(intensity, maxAmplitude, minAmplitude, filename);
 
     }
 
-    public static void draw2DPhase(Complex[][] function, String filename) {
+    public static int[][] draw2DPhase(Complex[][] function, String filename) {
         double[][] phase = new double[function.length][function[0].length];
         double minPhase = Double.MAX_VALUE;
         double maxPhase = Double.MIN_VALUE;
@@ -59,12 +59,12 @@ public class Graph {
             }
         }
 
-        writeImage(phase, 2 * Math.PI, 0, filename);
+        return writeImage(phase, 2 * Math.PI, 0, filename);
     }
 
-    private static void writeImage(double[][] function, double max, double min, String filename) {
+    private static int[][] writeImage(double[][] function, double max, double min, String filename) {
         double stepNorm = (max - min) / 255;
-
+        int[][] color = new int[function.length][function[0].length];
 
         BufferedImage image = new BufferedImage(function.length, function[0].length, BufferedImage.TYPE_INT_RGB);
 
@@ -72,9 +72,11 @@ public class Graph {
             for (int j = 0; j < function[0].length; j++) {
                 for (int k = 1; k < 255; k++) {
                     if (function[i][j] > min + stepNorm * k) {
+                        color[i][j] = k - 1;
                         image.setRGB(i, j, new Color(k - 1, k - 1, k - 1).getRGB());
                     }
                     if (function[i][j] == max) {
+                        color[i][j] = 255;
                         image.setRGB(i, j, new Color(255, 255, 255).getRGB());
                     }
                 }
@@ -86,6 +88,8 @@ public class Graph {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return color;
     }
 
     public static Complex[][] phaseOnlyEncode(Complex[][] superposition) {
@@ -100,5 +104,31 @@ public class Graph {
 
 
         return result;
+    }
+
+    public static double standardDeviation(int[][] reality, int[][] expect) {
+        double deviation;
+
+        int length = reality.length;
+        double absReality, absExpect, firstMultiplier, secondMultiplier, firstSum = 0, secondSum = 0;
+
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < length; j++) {
+                absReality = Math.abs(reality[i][j]);
+                absExpect = Math.abs(expect[i][j]);
+                firstMultiplier = absReality * absReality - absExpect * absExpect;
+                firstMultiplier *= firstMultiplier;
+                firstSum += firstMultiplier;
+
+                secondMultiplier = Math.pow(absExpect, 4);
+                secondSum += secondMultiplier;
+            }
+        }
+
+        double one = firstSum;
+        double two  = Math.pow(secondSum, -1);
+        deviation = Math.sqrt(one * two) * 100;
+
+        return deviation;
     }
 }

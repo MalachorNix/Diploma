@@ -19,24 +19,51 @@ public class Main {
         double lambda = 0.00063; // Длина волны.
         double k = 2 * Math.PI / lambda; // Волновое число.
         double gauss = 0.3; // Гауссовый параметр.
-        double threshold = 0.66;
-        double sigma0 = 0.6;
+        double threshold = 0.33;
+        double sigma0 = 0.9;
 
-        mode2D(dimension, xyRange, n, m, gauss);
-        fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
-        fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
-        fourierTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
-        fourierTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
-        fresnelTransform2DSuperposition(dimension, uvRange, xyRange, gauss, z, k);
-        fresnelTransform2DSuperpositionPhaseOnly(dimension, uvRange, xyRange, gauss, z, k);
-        transform2DSuperpositionFourier(dimension, uvRange, xyRange, gauss, z, k);
-        transform2DPhaseOnlyFourier(dimension, uvRange, xyRange, gauss, z, k);
-        expAndMode(dimension, xyRange, n, m, gauss, sigma0);
+        // mode2D(dimension, xyRange, n, m, gauss);
+        // superposition(dimension, xyRange, gauss);
+        // fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        // fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        // fourierTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        // fourierTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        // fresnelTransform2DSuperposition(dimension, uvRange, xyRange, gauss, z, k);
+        // fresnelTransform2DSuperpositionPhaseOnly(dimension, uvRange, xyRange, gauss, z, k);
+        // transform2DSuperpositionFourier(dimension, uvRange, xyRange, gauss, z, k);
+        // transform2DPhaseOnlyFourier(dimension, uvRange, xyRange, gauss, z, k);
+        // expAndLesem(dimension, xyRange, n, m, gauss, sigma0);
         partialCoding(dimension, xyRange, n, m, gauss, threshold, sigma0);
-        pcSuper(dimension, xyRange, gauss, threshold, sigma0);
+        // pcSuper(dimension, xyRange, gauss, threshold, sigma0);
     }
 
-    private static void expAndMode(int dimension, double xyRange, int n, int m, double gauss, double sigma0) {
+    private static double standardDeviation(Complex[][] reality, Complex[][] expect) {
+        double deviation;
+
+        int length = reality.length;
+        double absReality, absExpect, firstMultiplier, secondMultiplier, firstSum = 0, secondSum = 0;
+
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < length; j++) {
+                absReality = reality[i][j].abs();
+                absExpect = expect[i][j].abs();
+                firstMultiplier = absReality * absReality - absExpect * absExpect;
+                firstMultiplier *= firstMultiplier;
+                firstSum += firstMultiplier;
+
+                secondMultiplier = Math.pow(absExpect, 4);
+                secondSum += secondMultiplier;
+            }
+        }
+
+        double one = firstSum;
+        double two  = Math.pow(secondSum, -1);
+        deviation = Math.sqrt(one * two) * 100;
+
+        return deviation;
+    }
+
+    private static Complex[][] expAndLesem(int dimension, double xyRange, int n, int m, double gauss, double sigma0) {
         Complex[][] exponent = new Complex[dimension][dimension];
         double step = 2 * xyRange / dimension;
         for (int i = 0; i < dimension; i++) {
@@ -49,8 +76,9 @@ public class Main {
                 exponent[i][j] = Complex.valueOf(exp).multiply(phaseOnly);
             }
         }
-        Graph.draw2DIntensity(exponent, "pictures/intensityEXP.bmp");
-        Graph.draw2DPhase(exponent, "pictures/phaseEXP.bmp");
+        Graph.draw2DIntensity(exponent, "pictures/intensityEXP sigma" + sigma0 +".bmp");
+        Graph.draw2DPhase(exponent, "pictures/phaseEXP sigma" + sigma0 +".bmp");
+        return exponent;
     }
 
     private static void partialCoding(int dimension, double xyRange, int n, int m, double gauss, double threshold, double sigma0) {
@@ -87,8 +115,11 @@ public class Main {
                 }
             }
         }
-        Graph.draw2DIntensity(picture, "pictures/ВЫХОД partInt" + "threshold" + threshold + ".bmp");
-        Graph.draw2DPhase(picture, "pictures/ВЫХОД partPhase" + "threshold" + threshold + ".bmp");
+        // Complex[][] exponent = expAndLesem(dimension, xyRange, n, m, gauss, sigma0);
+        int[][] reality = Graph.draw2DIntensity(picture, "pictures/ВЫХОД partInt" + "threshold" + threshold + " sigma0 " + sigma0 + ".bmp");
+        // int[][] exp = Graph.draw2DIntensity(exponent, "pictures/gk;nrtu.bmp");
+        Graph.draw2DPhase(picture, "pictures/ВЫХОД partPhase" + "threshold" + threshold + " sigma0 " + sigma0 + ".bmp");
+        // System.out.println(Graph.standardDeviation(reality, exp) + " значения на эксп");
     }
 
     private static void pcSuper(int dimension, double xyRange, double gauss, double threshold, double sigma0) {
@@ -174,10 +205,14 @@ public class Main {
                 phaseOnly[i][j] = Complex.I.multiply(mode[i][j].getArgument()).exp();
             }
         }
-        Graph.draw2DIntensity(phaseOnly, "pictures/intensityPhaseGH" + n + m + " xy" + xyRange + " sigma " + gauss + ".bmp");
-        Graph.draw2DPhase(phaseOnly, "pictures/phasePhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + ".bmp");
-        Graph.draw2DIntensity(mode, "pictures/intensityGH" + n + m + " xy" + xyRange + " sigma " + gauss + ".bmp");
-        Graph.draw2DPhase(mode, "pictures/phaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + ".bmp");
+        int[][] reality = Graph.draw2DIntensity(phaseOnly, "pictures/intensityPhaseGH" + n + m + " xy" + xyRange + " sigma " + gauss + ".bmp");
+        int[][] expect = Graph.draw2DIntensity(mode, "pictures/intensityGH" + n + m + " xy" + xyRange + " sigma " + gauss + ".bmp");
+        System.out.println(Graph.standardDeviation(expect, reality) + " пиксели интенсивности");
+        reality = Graph.draw2DPhase(phaseOnly, "pictures/phasePhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + ".bmp");
+        expect = Graph.draw2DPhase(mode, "pictures/phaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + ".bmp");
+        System.out.println(Graph.standardDeviation(expect, reality) + " пиксели фазы");
+        System.out.println(standardDeviation(phaseOnly, mode) + " значения");
+
     }
 
     /**
@@ -194,15 +229,21 @@ public class Main {
      */
     private static void fresnelTransform2D(int dimension, double uvRange, double xyRange, int n, int m, double gauss, double z, double k) {
         Complex[][] result = new Complex[dimension][dimension];
+        Complex[][] mode = new Complex[dimension][dimension];
         double stepUV = 2 * uvRange / dimension;
         double stepXY = 2 * xyRange / dimension;
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
-                result[i][j] = FresnelTransform.transform2D(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
-                        xyRange, stepXY, n, m, gauss, dimension);
+                mode[i][j] = new Complex(hermiteGauss2D(n, m, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss));
             }
         }
-        mode2D(dimension, xyRange, n, m, gauss);
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                result[i][j] = FresnelTransform.transform2D(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
+                        xyRange, stepXY, n, m, gauss, dimension, mode);
+            }
+        }
+        // mode2D(dimension, xyRange, n, m, gauss);
         Graph.draw2DIntensity(result, "pictures/intensityFresnelGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + ".bmp");
         Graph.draw2DPhase(result, "pictures/phaseFresnelGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + ".bmp");
     }
@@ -223,15 +264,23 @@ public class Main {
     private static void fresnelTransform2DPhaseOnly(int dimension, double uvRange, double xyRange, int n, int m,
                                                     double gauss, double z, double k) {
         Complex[][] result = new Complex[dimension][dimension];
+        Complex[][] mode = new Complex[dimension][dimension];
         double stepUV = 2 * uvRange / dimension;
         double stepXY = 2 * xyRange / dimension;
+
+        for (int i = 0; i < dimension; i++) {
+            for (int j = 0; j < dimension; j++) {
+                mode[i][j] = new Complex(hermiteGauss2D(n, m, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss));
+            }
+        }
+
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
                 result[i][j] = FresnelTransform.transform2DPhase(-uvRange + i * stepUV, -uvRange + j * stepUV, z, k,
-                        xyRange, stepXY, n, m, gauss, dimension);
+                        xyRange, stepXY, n, m, gauss, dimension, mode);
             }
         }
-        mode2D(dimension, xyRange, n, m, gauss);
+        // mode2D(dimension, xyRange, n, m, gauss);
         Graph.draw2DIntensity(result, "pictures/intensityFresnelPhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
         Graph.draw2DPhase(result, "pictures/phaseFresnelPhaseGH" + n + m + " xy" + xyRange + " gauss " + gauss + " uv" + uvRange + " z" + z + " k" + k + ".bmp");
     }
