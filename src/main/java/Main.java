@@ -28,19 +28,19 @@ public class Main {
         double threshold = 0.33;
         double sigma0 = 0.6;
 
-        // mode2D(dimension, xyRange, n, m, gauss);
-        // superposition(dimension, xyRange, gauss);
-        // fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
-        // fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k, sigma0);
-        // fourierTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
-        // fourierTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k, sigma0);
-        // fresnelTransform2DSuperposition(dimension, uvRange, xyRange, gauss, z, k);
-        // fresnelTransform2DSuperpositionPhaseOnly(dimension, uvRange, xyRange, gauss, z, k);
-        // transform2DSuperpositionFourier(dimension, uvRange, xyRange, gauss, z, k);
-        // transform2DPhaseOnlyFourier(dimension, uvRange, xyRange, gauss, z, k);
-        // expAndLesem(dimension, xyRange, n, m, gauss, sigma0);
-        // partialCoding(dimension, xyRange, n, m, gauss, threshold, sigma0);
-        // pcSuper(dimension, xyRange, gauss, threshold, sigma0);
+        mode2D(dimension, xyRange, n, m, gauss);
+        superposition(dimension, xyRange, gauss);
+        fresnelTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        fresnelTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k, sigma0);
+        fourierTransform2D(dimension, uvRange, xyRange, n, m, gauss, z, k);
+        fourierTransform2DPhaseOnly(dimension, uvRange, xyRange, n, m, gauss, z, k, sigma0);
+        fresnelTransform2DSuperposition(dimension, uvRange, xyRange, gauss, z, k);
+        fresnelTransform2DSuperpositionPhaseOnly(dimension, uvRange, xyRange, gauss, z, k);
+        transform2DSuperpositionFourier(dimension, uvRange, xyRange, gauss, z, k);
+        transform2DPhaseOnlyFourier(dimension, uvRange, xyRange, gauss, z, k);
+        expAndLesem(dimension, xyRange, n, m, gauss, sigma0);
+        partialCoding(dimension, xyRange, n, m, gauss, threshold, sigma0);
+        pcSuper(dimension, xyRange, gauss, threshold, sigma0);
 
 
         File real = new File("real.bmp");
