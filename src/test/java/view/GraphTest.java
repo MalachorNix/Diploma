@@ -1,7 +1,6 @@
 package view;
 
 import controller.FresnelTransform;
-import controller.Superposition;
 import org.apache.commons.math3.complex.Complex;
 import org.junit.Test;
 

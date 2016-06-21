@@ -18,10 +18,10 @@ public final class FresnelTransform {
     }
 
     public static Complex transform2DPhase(double u, double v, double z, double k, double xyRange, double stepXY,
-                                           int n, int m, double gauss, int dimension, Complex[][] mode) {
+                                           int n, int m, double gauss, int dimension, Complex[][] mode, double sigma0) {
         Complex first = Complex.I.multiply(-(k / (2 * Math.PI * z)));
         Complex second = Complex.I.multiply(k * z).exp();
-        Complex third = integral2DPhase(u, v, z, k, xyRange, stepXY, n, m, gauss, dimension, mode);
+        Complex third = integral2DPhase(u, v, z, k, xyRange, stepXY, n, m, gauss, dimension, mode, sigma0);
         return first.multiply(second).multiply(third);
     }
 
@@ -56,13 +56,13 @@ public final class FresnelTransform {
     }
 
     private static Complex integral2DPhase(double u, double v, double z, double k, double xyRange, double stepXY,
-                                           int n, int m, double gauss, int dimension, Complex[][] mode) {
+                                           int n, int m, double gauss, int dimension, Complex[][] mode, double sigma0) {
         Complex sum = new Complex(0, 0);
         for (int i = 0; i < dimension; i++) {
             for (int j = 0; j < dimension; j++) {
                 // Complex mode = Complex.valueOf(GHMode.hermiteGauss2D(n, m, -xyRange + i * stepXY, -xyRange + j * stepXY, gauss));
                 // Complex multi = integrand2DPhase(mode, k, z, -xyRange + i * stepXY, -xyRange + j * stepXY, u, v).multiply(stepXY * stepXY);
-                Complex multi = integrand2DPhase(mode[i][j], k, z, -xyRange + i * stepXY, -xyRange + j * stepXY, u, v).multiply(stepXY * stepXY);
+                Complex multi = integrand2DPhase(mode[i][j], k, z, -xyRange + i * stepXY, -xyRange + j * stepXY, u, v, sigma0).multiply(stepXY * stepXY);
                 sum = Complex.valueOf(sum.getReal() + multi.getReal(), sum.getImaginary() + multi.getImaginary());
             }
         }
@@ -100,13 +100,13 @@ public final class FresnelTransform {
     }
 
     public static Complex integrand2D(Complex function, double k, double z, double x, double y, double u, double v) {
-        double exp = Math.exp(-(x * x + y * y) / (2 * 0.6 * 0.6));
-        return function.multiply(transformExponent2D(k, z, x, y, u, v)).multiply(exp);
-        // return function.multiply(transformExponent2D(k, z, x, y, u, v));
+        // double exp = Math.exp(-(x * x + y * y) / (2 * 0.6 * 0.6));
+        // return function.multiply(transformExponent2D(k, z, x, y, u, v)).multiply(exp);
+        return function.multiply(transformExponent2D(k, z, x, y, u, v));
     }
 
-    private static Complex integrand2DPhase(Complex mode, double k, double z, double x, double y, double u, double v) {
-        double exp = Math.exp(-(x * x + y * y) / (2 * 0.6 * 0.6));
+    private static Complex integrand2DPhase(Complex mode, double k, double z, double x, double y, double u, double v, double sigma0) {
+        double exp = Math.exp(-(x * x + y * y) / (2 * sigma0 * sigma0));
         Complex phaseOnly = Complex.I.multiply(mode.getArgument()).exp();
         // return phaseOnly.multiply(transformExponent2D(k, z, x, y, u, v));
         return phaseOnly.multiply(transformExponent2D(k, z, x, y, u, v)).multiply(exp);
